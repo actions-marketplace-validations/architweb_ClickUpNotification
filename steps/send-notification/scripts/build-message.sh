@@ -11,7 +11,9 @@ COMMIT_FILE="$5"
 OUTPUT_FILE="$6"
 
 # Load user info
-source "$USER_INFO_FILE"
+if [ -f "$USER_INFO_FILE" ]; then
+  source "$USER_INFO_FILE"
+fi
 
 # Build base message
 if [ -n "$TITLE" ]; then

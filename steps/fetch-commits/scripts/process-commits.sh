@@ -32,6 +32,9 @@ for ((i=0; i<COMMIT_COUNT; i++)); do
   AUTHOR=$(echo "$AUTHOR" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
   [ -z "$AUTHOR" ] && AUTHOR="Unknown Contributor"
 
+  # Ensure AUTHOR is properly quoted to prevent command execution
+  AUTHOR=$(printf '%s' "$AUTHOR")
+
   if [[ "$FULL_COMMIT_MESSAGE" == "true" ]]; then
     RAW_MESSAGE=$(echo "$COMMITS_JSON" | jq -r ".[$i].message")
 
