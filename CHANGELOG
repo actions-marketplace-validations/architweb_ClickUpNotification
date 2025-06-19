@@ -1,5 +1,103 @@
 # Changelog
 
+## [v3.0.0] - 2025-06-19
+
+### 🚀 Major Features
+
+- **📊 Commit Statistics**: Display detailed deployment metrics including commits, files changed, lines added/removed, contributors, and time since last deployment
+- **🧪 Test Mode**: Preview notifications without sending to ClickUp, with workspace/channel name resolution
+- **📝 Enhanced Commit Processing**: Improved commit sorting (A-Z), merge commit filtering, and message formatting
+- **🏗️ Modular Architecture**: Complete refactoring into script-based components for better maintainability
+
+### 🎯 New Input Parameters
+
+- `show_commit_statistics`: Display commit statistics table (default: "false")
+- `test_mode`: Preview mode without sending to ClickUp (default: "false")
+- `sort_commits_alphabetically`: Sort commits A-Z by message (default: "true")
+- `full_commit_message`: Use full commit message vs first line only (default: "true")
+
+### 🔧 Technical Improvements
+
+- **Scripts-Based Architecture**: Split large actions into focused, reusable scripts
+  - `fetch-commits`: 5 specialized scripts for commit processing
+  - `send-notification`: 5 specialized scripts for message handling
+- **Name Resolution**: Automatically resolve workspace and channel IDs to human-readable names
+- **Self-Referencing**: Use `${{ github.action_path }}` instead of hardcoded versions for sub-actions
+- **Enhanced Error Handling**: Improved validation and error reporting
+- **Better Separation of Concerns**: Each script handles a single responsibility
+
+### 📊 Commit Statistics Features
+
+- **📝 Total Commits**: Count of commits in deployment
+- **📁 Files Changed**: Number of modified files
+- **➕➖ Lines**: Added and removed lines of code
+- **👥 Contributors**: Number of unique commit authors
+- **⏰ Time Since Last Deploy**: Human-readable time difference
+- **📋 Table Format**: Clean vertical table layout
+
+### 🧪 Test Mode Features
+
+- **🔍 Message Preview**: See exact content before sending
+- **📝 Metadata Display**: Character count, format, destination details
+- **🏷️ Name Resolution**: Show workspace and channel names (not just IDs)
+- **🔒 Security**: API token hidden in preview
+- **📋 Clear Instructions**: How to switch to live mode
+
+### 🏗️ Architecture Changes
+
+- **Modular Scripts**: Each component split into focused shell scripts
+- **Better Maintainability**: Easier to debug, test, and modify individual components
+- **Improved Reusability**: Scripts can be used independently or in other contexts
+- **Cleaner Codebase**: Reduced complexity in main action files
+
+### ⚡ Performance & Quality
+
+- **Conditional Processing**: Statistics and name resolution only run when needed
+- **Efficient API Calls**: Optimized ClickUp API usage
+- **Better Error Recovery**: Graceful fallbacks for API failures
+- **Improved Logging**: Better visibility into action execution
+
+### 🔄 Migration Guide from v2.x
+
+**✅ No Breaking Changes** - v3.0.0 is fully backward compatible with v2.x configurations.
+
+**New Optional Parameters:**
+
+- All new parameters have sensible defaults and are optional
+- Existing workflows will continue to work without modification
+- New features are opt-in via new input parameters
+
+**Recommended Updates:**
+
+```yaml
+# Update version reference
+- uses: architweb/ClickUpNotification@v3.0.0
+  with:
+    # ... existing inputs work as-is ...
+
+    # Optional: Enable new features
+    show_commit_statistics: "true" # Add deployment metrics
+    test_mode: "false" # Preview during development
+    sort_commits_alphabetically: "true" # Already default
+```
+
+**No Action Required:**
+
+- ✅ Existing secrets work unchanged
+- ✅ All input parameters remain compatible
+- ✅ Output format is consistent (unless new features enabled)
+- ✅ No workflow file changes needed for basic functionality
+
+**Safe Upgrade Testing:**
+
+```yaml
+# Test the upgrade safely before going live
+- uses: architweb/ClickUpNotification@v3.0.0
+  with:
+    # ... your existing configuration ...
+    test_mode: "true" # Preview changes without sending
+```
+
 ## [v2.0.1] - 2025-06-15
 
 ### 🚨 Critical Bug Fix

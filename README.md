@@ -14,15 +14,20 @@ It summarizes the latest code changes, grouped by author and formatted as an org
 
 It'll Send message to ClickUp chat, including:
 
-- Custom title for notifications
-- Custom description
-- Project name
-- Triggered by
-- Duration (configurable)
-- Changelog since last run, grouped by author (configurable)
-- Automatic ClickUp task links from (custom) task IDs in commit messages
-- Single line or full commit message mode
-- Emphasizes Conventional Commit types
+- Custom **title**
+- Custom **description**
+- **Project name**
+- **Triggered by**
+- **Duration** (configurable)
+- **Changelog** since last run, grouped by author (configurable)
+- **Commits statistics** with deployment metrics (configurable)
+- Automatic ClickUp **task links** from (custom) task IDs in commit messages
+- **Alphabetical sorting** of commits (configurable)
+- **Single line** or **full commit** message mode
+- **Emphasizes Conventional** Commit types
+- **Smart name resolution** for workspaces and channels
+- **Merge commit filtering** to keep changelogs clean
+- **Test mode** for previewing messages without sendingTest mode
 
 ## Screenshots
 
@@ -50,17 +55,20 @@ Simply copy them from the link.
 
 The action requires the following inputs to connect to ClickUp and identify your project, make sure to add them as secrets to your GitHub repository:
 
-| Input                    | Description                                               | Type              | Required | Default |
-| ------------------------ | --------------------------------------------------------- | ----------------- | -------- | ------- |
-| `clickup_api_token`      | Your ClickUp API token (Personal or Bot)                  | string            | Yes      | `none`  |
-| `clickup_workspace_id`   | The numerical ID of the ClickUp Workspace (Team)          | string            | Yes      | `none`  |
-| `clickup_channel_id`     | The ID of the ClickUp List or Chat View for notifications | string            | Yes      | `none`  |
-| `clickup_project_name`   | A descriptive name for your project (used in the message) | string            | Yes      | `none`  |
-| `title`                  | Custom title for the notification message                 | string            | No       | `""`    |
-| `description`            | Custom description for the notification message           | string            | No       | `""`    |
-| `show_fetch_duration`    | Show duration information in the notification             | "true" \| "false" | No       | `true`  |
-| `show_changelog_commits` | Show changelog commits in the notification                | "true" \| "false" | No       | `true`  |
-| `full_commit_message`    | A flag to indicate whether to use full commit messages    | "true" \| "false" | No       | `true`  |
+| Input                         | Description                                               | Type              | Required | Default |
+| ----------------------------- | --------------------------------------------------------- | ----------------- | -------- | ------- |
+| `clickup_api_token`           | Your ClickUp API token (Personal or Bot)                  | string            | Yes      | `none`  |
+| `clickup_workspace_id`        | The numerical ID of the ClickUp Workspace (Team)          | string            | Yes      | `none`  |
+| `clickup_channel_id`          | The ID of the ClickUp List or Chat View for notifications | string            | Yes      | `none`  |
+| `clickup_project_name`        | A descriptive name for your project (used in the message) | string            | Yes      | `none`  |
+| `title`                       | Custom title for the notification message                 | string            | No       | `""`    |
+| `description`                 | Custom description for the notification message           | string            | No       | `""`    |
+| `show_fetch_duration`         | Show duration information in the notification             | "true" \| "false" | No       | `true`  |
+| `show_changelog_commits`      | Show changelog commits in the notification                | "true" \| "false" | No       | `true`  |
+| `full_commit_message`         | Use full commit messages instead of first line only       | "true" \| "false" | No       | `true`  |
+| `sort_commits_alphabetically` | Sort commits alphabetically by commit message (A-Z)       | "true" \| "false" | No       | `true`  |
+| `show_commit_statistics`      | Show commit statistics table in the notification          | "true" \| "false" | No       | `false` |
+| `test_mode`                   | Preview mode - show message without sending to ClickUp    | "true" \| "false" | No       | `false` |
 
 ## Task ID Integration
 
@@ -86,17 +94,66 @@ The action will automatically convert this into a clickable link in the ClickUp 
 
 Where the task ID becomes a clickable link to the task in ClickUp. This makes it easy for your team to navigate directly to the relevant tasks from deployment notifications.
 
+## 🚀 Advanced Features
+
+### 📊 Commit Statistics
+
+Enable detailed deployment metrics with `show_commit_statistics: "true"`:
+
+```yaml
+- uses: architweb/ClickUpNotification@v3.0.0
+  with:
+    # ... other inputs ...
+    show_commit_statistics: "true"
+```
+
+**Statistics Include:**
+
+- 📝 **Total Commits**: Number of commits in deployment
+- 📁 **Files Changed**: Modified files count
+- ➕ **Lines Added**: Lines of code added
+- ➖ **Lines Removed**: Lines of code removed
+- ⏰ **Last Deploy**: Time since previous deployment
+- 👥 **Contributors**: Number of unique commit authors
+
+### 🧪 Test Mode
+
+Preview notifications without sending to ClickUp:
+
+```yaml
+- uses: architweb/ClickUpNotification@v3.0.0
+  with:
+    # ... other inputs ...
+    test_mode: "true"
+```
+
+**Test Mode Features:**
+
+- 🔍 **Message Preview**: See exact content before sending
+- 🏷️ **Name Resolution**: Shows workspace and channel names (not just IDs)
+- 📝 **Metadata**: Character count, format, destination details
+- 🔒 **Security**: API token hidden in preview
+
+### 🔤 Enhanced Commit Processing
+
+Fine-tune how commits are displayed:
+
+```yaml
+- uses: architweb/ClickUpNotification@v3.0.0
+  with:
+    # ... other inputs ...
+    sort_commits_alphabetically: "true" # Sort commits A-Z
+    full_commit_message: "true" # Use full commit messages
+```
+
+**Features:**
+
+- **🚫 Merge Filtering**: Automatically excludes merge commits
+- **🔤 Alphabetical Sorting**: Orders commits A-Z by message
+- **📝 Full Messages**: Option for complete commit messages vs first line only
+- **👥 Author Grouping**: Commits organized by contributor
+
 ## Architecture
-
-**v2.0.1** introduces a modular architecture for better maintainability and flexibility:
-
-### Modular Steps
-
-The action is now split into three independent steps:
-
-- **⏱️ Fetch Duration** (`./steps/fetch-duration`) - Calculates workflow execution time
-- **📝 Fetch Commits** (`./steps/fetch-commits`) - Generates changelog from commit history
-- **📢 Send ClickUp Notification** (`./steps/send-notification`) - Sends the formatted message to ClickUp
 
 ### Benefits
 
@@ -167,9 +224,11 @@ jobs:
       # - name: Build Project
       #   run: npm run build
       # - name: Deploy to Staging
-      #   run: ./deploy_staging.sh      # Last step: Send ClickUp notification upon successful deployment
+      #   run: ./deploy_staging.sh
+
+      # Last step: Send ClickUp notification upon successful deployment
       - name: Send ClickUp Notification
-        uses: architweb/ClickUpNotification@v2.0.1 # Use the latest version of the action
+        uses: architweb/ClickUpNotification@v3.0.0 # Use the latest version of the action
         with:
           # Pass the required secrets to the action
           clickup_api_token: ${{ secrets.CLICKUP_API_TOKEN }}
@@ -178,13 +237,52 @@ jobs:
           clickup_project_name: ${{ secrets.CLICKUP_PROJECT_NAME }}
           # Optional parameters
           full_commit_message: "true" # Set to 'false' to use only first line of commit messages
+          sort_commits_alphabetically: "true" # Sort commits A-Z for better readability
+          show_commit_statistics: "false" # Set to 'true' to show deployment metrics
           show_fetch_duration: "true" # Set to 'false' to hide duration information
           show_changelog_commits: "true" # Set to 'false' to hide changelog
+          test_mode: "false" # Set to 'true' to preview without sending
           title: "🎉 Staging Deployment Complete" # Custom title (optional)
           description: "New features deployed to staging environment" # Custom description (optional)
 ```
 
 ## Advanced Usage Examples
+
+### 📊 Production Deployment with Full Statistics
+
+Perfect for production deployments where you want comprehensive metrics:
+
+```yaml
+- name: Production Deployment Notification
+  uses: architweb/ClickUpNotification@v3.0.0
+  with:
+    clickup_api_token: ${{ secrets.CLICKUP_API_TOKEN }}
+    clickup_workspace_id: ${{ secrets.CLICKUP_WORKSPACE_ID }}
+    clickup_channel_id: ${{ secrets.CLICKUP_CHANNEL_ID }}
+    clickup_project_name: ${{ secrets.CLICKUP_PROJECT_NAME }}
+    title: "🚀 Production Release"
+    description: "Production deployment with full metrics and changelog"
+    show_commit_statistics: "true" # Show detailed deployment stats
+    sort_commits_alphabetically: "true"
+    full_commit_message: "true"
+```
+
+### 🧪 Testing and Development
+
+Preview notifications during development:
+
+```yaml
+- name: Test Notification Format
+  uses: architweb/ClickUpNotification@v3.0.0
+  with:
+    clickup_api_token: ${{ secrets.CLICKUP_API_TOKEN }}
+    clickup_workspace_id: ${{ secrets.CLICKUP_WORKSPACE_ID }}
+    clickup_channel_id: ${{ secrets.CLICKUP_CHANNEL_ID }}
+    clickup_project_name: "MyApp"
+    test_mode: "true" # Preview only - no actual sending
+    show_commit_statistics: "true"
+    title: "Testing notification format"
+```
 
 ### Minimal Notification (No Duration/Changelog)
 
@@ -192,7 +290,7 @@ Perfect for quick status updates:
 
 ```yaml
 - name: Quick Status Update
-  uses: architweb/ClickUpNotification@v2.0.1
+  uses: architweb/ClickUpNotification@v3.0.0
   with:
     clickup_api_token: ${{ secrets.CLICKUP_API_TOKEN }}
     clickup_workspace_id: ${{ secrets.CLICKUP_WORKSPACE_ID }}
@@ -210,7 +308,7 @@ Comprehensive notification for important deployments:
 
 ```yaml
 - name: Production Release Notification
-  uses: architweb/ClickUpNotification@v2.0.1
+  uses: architweb/ClickUpNotification@v3.0.0
   with:
     clickup_api_token: ${{ secrets.CLICKUP_API_TOKEN }}
     clickup_workspace_id: ${{ secrets.CLICKUP_WORKSPACE_ID }}
