@@ -31,6 +31,10 @@ inputs:
     description: "Use the full commit message instead of the first line"
     required: false
     default: "true"
+  sort_commits_alphabetically:
+    description: "Sort commits alphabetically by commit message (A-Z)"
+    required: false
+    default: "true"
   title:
     description: "Custom title for the notification message"
     required: false
@@ -63,6 +67,7 @@ runs:
       uses: architweb/ClickUpNotification/steps/fetch-commits@v2.0.1
       with:
         full_commit_message: ${{ inputs.full_commit_message }}
+        sort_commits_alphabetically: ${{ inputs.sort_commits_alphabetically }}
 
     - name: 📢 Send ClickUp Notification
       uses: architweb/ClickUpNotification/steps/send-notification@v2.0.1

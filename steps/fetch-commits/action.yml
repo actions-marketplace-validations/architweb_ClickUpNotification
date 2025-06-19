@@ -6,6 +6,10 @@ inputs:
     description: "Use the full commit message instead of the first line"
     required: false
     default: "false"
+  sort_commits_alphabetically:
+    description: "Sort commits alphabetically by commit message (A-Z)"
+    required: false
+    default: "true"
 
 outputs:
   commit_file:
@@ -119,7 +123,12 @@ runs:
                     AUTHOR="${AUTHOR_LIST[$k]}"
                     COMMITS="${AUTHOR_COMMITS_LIST[$k]}"
                     if [ -n "$COMMITS" ]; then
-                      COMMIT_LIST_MD+=$'\n'"_*$AUTHOR:*_\n$COMMITS"
+                      if [[ "${{ inputs.sort_commits_alphabetically }}" == "true" ]]; then
+                        SORTED_COMMITS=$(echo "$COMMITS" | sort)
+                        COMMIT_LIST_MD+=$'\n'"_*$AUTHOR:*_\n$SORTED_COMMITS"
+                      else
+                        COMMIT_LIST_MD+=$'\n'"_*$AUTHOR:*_\n$COMMITS"
+                      fi
                     fi
                   done
 
