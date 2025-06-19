@@ -2,9 +2,6 @@ name: "📝 Fetch Commits"
 description: "Fetches commit history and formats changelog"
 
 inputs:
-  action_repo_path:
-    description: "Path to the main action repository"
-    required: true
   full_commit_message:
     description: "Use the full commit message instead of the first line"
     required: false
@@ -31,8 +28,8 @@ runs:
       shell: bash
       run: |
         COMMITS_DATA=$(mktemp)
-        chmod +x "${{ inputs.action_repo_path }}/steps/fetch-commits/scripts/get-commit-data.sh"
-        "${{ inputs.action_repo_path }}/steps/fetch-commits/scripts/get-commit-data.sh" "$COMMITS_DATA"
+        chmod +x "./steps/fetch-commits/scripts/get-commit-data.sh"
+        "./steps/fetch-commits/scripts/get-commit-data.sh" "$COMMITS_DATA"
         echo "COMMITS_DATA=$COMMITS_DATA" >> $GITHUB_OUTPUT
 
     - name: Process Commits
@@ -40,8 +37,8 @@ runs:
       shell: bash
       run: |
         COMMITS_OUTPUT=$(mktemp)
-        chmod +x "${{ inputs.action_repo_path }}/steps/fetch-commits/scripts/process-commits.sh"
-        "${{ inputs.action_repo_path }}/steps/fetch-commits/scripts/process-commits.sh" \
+        chmod +x "./steps/fetch-commits/scripts/process-commits.sh"
+        "./steps/fetch-commits/scripts/process-commits.sh" \
           "${{ steps.get-data.outputs.COMMITS_DATA }}" \
           "${{ inputs.full_commit_message }}" \
           "${{ inputs.sort_commits_alphabetically }}" \
@@ -54,8 +51,8 @@ runs:
       shell: bash
       run: |
         STATS_OUTPUT=$(mktemp)
-        chmod +x "${{ inputs.action_repo_path }}/steps/fetch-commits/scripts/generate-statistics.sh"
-        "${{ inputs.action_repo_path }}/steps/fetch-commits/scripts/generate-statistics.sh" \
+        chmod +x "./steps/fetch-commits/scripts/generate-statistics.sh"
+        "./steps/fetch-commits/scripts/generate-statistics.sh" \
           "${{ steps.get-data.outputs.COMMITS_DATA }}" \
           "${{ steps.get-data.outputs.COMMITS_DATA }}.meta" \
           "$STATS_OUTPUT"
@@ -66,8 +63,8 @@ runs:
       shell: bash
       run: |
         COMMIT_FILE=$(mktemp)
-        chmod +x "${{ inputs.action_repo_path }}/steps/fetch-commits/scripts/build-changelog.sh"
-        "${{ inputs.action_repo_path }}/steps/fetch-commits/scripts/build-changelog.sh" \
+        chmod +x "./steps/fetch-commits/scripts/build-changelog.sh"
+        "./steps/fetch-commits/scripts/build-changelog.sh" \
           "${{ steps.process.outputs.COMMITS_OUTPUT }}" \
           "${{ steps.stats.outputs.STATS_OUTPUT }}" \
           "${{ inputs.show_commit_statistics }}" \

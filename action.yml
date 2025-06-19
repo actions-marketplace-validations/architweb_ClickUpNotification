@@ -62,7 +62,6 @@ runs:
         echo "GITHUB_TOKEN=${{ github.token }}" >> $GITHUB_ENV
         echo "REPO_NAME=$(echo "$GITHUB_REPOSITORY" | cut -d '/' -f 2)" >> $GITHUB_ENV
         echo "TRIGGERING_ACTOR=$GITHUB_ACTOR" >> $GITHUB_ENV
-        echo "ACTION_REPO_PATH=${{ github.action_path }}" >> $GITHUB_ENV
 
     - name: ⏱️ Fetch Duration
       id: duration
@@ -74,7 +73,6 @@ runs:
       if: ${{ inputs.show_changelog_commits == 'true' }}
       uses: ./steps/fetch-commits
       with:
-        action_repo_path: ${{ github.action_path }}
         full_commit_message: ${{ inputs.full_commit_message }}
         sort_commits_alphabetically: ${{ inputs.sort_commits_alphabetically }}
         show_commit_statistics: ${{ inputs.show_commit_statistics }}
@@ -82,7 +80,6 @@ runs:
     - name: 📢 Send ClickUp Notification
       uses: ./steps/send-notification
       with:
-        action_repo_path: ${{ github.action_path }}
         clickup_api_token: ${{ inputs.clickup_api_token }}
         clickup_workspace_id: ${{ inputs.clickup_workspace_id }}
         clickup_channel_id: ${{ inputs.clickup_channel_id }}

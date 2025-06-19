@@ -28,7 +28,6 @@
   - `fetch-commits`: 5 specialized scripts for commit processing
   - `send-notification`: 5 specialized scripts for message handling
 - **Name Resolution**: Automatically resolve workspace and channel IDs to human-readable names
-- **Self-Referencing**: Use `${{ github.action_path }}` instead of hardcoded versions for sub-actions
 - **Enhanced Error Handling**: Improved validation and error reporting
 - **Better Separation of Concerns**: Each script handles a single responsibility
 
