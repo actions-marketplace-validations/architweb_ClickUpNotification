@@ -72,7 +72,6 @@ runs:
         "$GITHUB_ACTION_PATH/scripts/resolve-names.sh" \
           "${{ inputs.clickup_api_token }}" \
           "${{ inputs.clickup_workspace_id }}" \
-          "${{ inputs.clickup_channel_id }}" \
           "$NAMES_FILE"
         echo "NAMES_FILE=$NAMES_FILE" >> $GITHUB_OUTPUT
 
@@ -85,7 +84,6 @@ runs:
           "${{ steps.message.outputs.MESSAGE_FILE }}" \
           "${{ steps.names.outputs.NAMES_FILE }}" \
           "${{ inputs.clickup_workspace_id }}" \
-          "${{ inputs.clickup_channel_id }}"
         rm -f "${{ steps.message.outputs.MESSAGE_FILE }}" "${{ steps.names.outputs.NAMES_FILE }}" "${{ inputs.commit_file }}"
 
     - name: Send to ClickUp
