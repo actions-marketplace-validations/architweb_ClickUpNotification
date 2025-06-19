@@ -38,115 +38,64 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Send Notification
+    - name: Get User Information
+      id: user-info
       shell: bash
       run: |
-        FORMATTED_DURATION="${{ inputs.formatted_duration }}"
-        COMMIT_FILE="${{ inputs.commit_file }}"
-        TEST_MODE="${{ inputs.test_mode }}"
+        USER_INFO=$(mktemp)
+        chmod +x "${{ github.action_path }}/scripts/get-user-info.sh"
+        "${{ github.action_path }}/scripts/get-user-info.sh" "$USER_INFO"
+        echo "USER_INFO=$USER_INFO" >> $GITHUB_OUTPUT
 
-        TRIGGERING_USER_NAME=$(curl -sf -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-          -H "Accept: application/vnd.github.v3+json" \
-          "https://api.github.com/users/${TRIGGERING_ACTOR}" | jq -r '.name // ""')
-
-        if [ -z "$TRIGGERING_USER_NAME" ]; then
-            TRIGGERING_USER_NAME="${TRIGGERING_ACTOR}"
-        fi
-
-        if [ -n "${{ inputs.title }}" ]; then
-          BASE_MESSAGE="🚀 **${GITHUB_REF_NAME}** | **${CLICKUP_PROJECT_NAME}** | ${{ inputs.title }}"
-        else
-          BASE_MESSAGE="🚀 **${CLICKUP_PROJECT_NAME}** deployed to **${GITHUB_REF_NAME}**"
-        fi
-
-        DEPLOY_INFO="_Triggered by: ${TRIGGERING_USER_NAME}"
-        [ "$FORMATTED_DURATION" != "unknown" ] && DEPLOY_INFO="${DEPLOY_INFO}, Done in: ${FORMATTED_DURATION}min_"
-        [ "$FORMATTED_DURATION" == "unknown" ] && DEPLOY_INFO="${DEPLOY_INFO}_"
-
-        if [ -n "${{ inputs.description }}" ]; then
-          FINAL_MESSAGE="${BASE_MESSAGE}\n\n${DEPLOY_INFO}\n\n_${{ inputs.description }}_"
-        else
-          FINAL_MESSAGE="${BASE_MESSAGE}\n\n${DEPLOY_INFO}"
-        fi
-
-        if [ -f "$COMMIT_FILE" ] && [ -s "$COMMIT_FILE" ]; then
-          COMMIT_LIST=$(cat "$COMMIT_FILE")
-          if [ -n "$COMMIT_LIST" ]; then
-            FINAL_MESSAGE="${FINAL_MESSAGE}${COMMIT_LIST}"
-          fi
-        fi
-
+    - name: Build Message
+      id: message
+      shell: bash
+      run: |
         MESSAGE_FILE=$(mktemp)
-        echo -e "$FINAL_MESSAGE" > "$MESSAGE_FILE"
+        chmod +x "${{ github.action_path }}/scripts/build-message.sh"
+        "${{ github.action_path }}/scripts/build-message.sh" \
+          "${{ steps.user-info.outputs.USER_INFO }}" \
+          "${{ inputs.title }}" \
+          "${{ inputs.description }}" \
+          "${{ inputs.formatted_duration }}" \
+          "${{ inputs.commit_file }}" \
+          "$MESSAGE_FILE"
+        echo "MESSAGE_FILE=$MESSAGE_FILE" >> $GITHUB_OUTPUT
 
-        PAYLOAD_FILE=$(mktemp)
-        jq -n --arg content "$(cat "$MESSAGE_FILE")" '{
-          type: "message",
-          content_format: "text/md",
-          content: $content
-        }' > "$PAYLOAD_FILE"
+    - name: Resolve Names
+      id: names
+      if: ${{ inputs.test_mode == 'true' }}
+      shell: bash
+      run: |
+        NAMES_FILE=$(mktemp)
+        chmod +x "${{ github.action_path }}/scripts/resolve-names.sh"
+        "${{ github.action_path }}/scripts/resolve-names.sh" \
+          "${{ inputs.clickup_api_token }}" \
+          "${{ inputs.clickup_workspace_id }}" \
+          "${{ inputs.clickup_channel_id }}" \
+          "$NAMES_FILE"
+        echo "NAMES_FILE=$NAMES_FILE" >> $GITHUB_OUTPUT
 
-        if [ "$TEST_MODE" == "true" ]; then
-          echo "🧪 TEST MODE ENABLED - Message preview (NOT SENT to ClickUp)"
-          echo ""
-          echo "═══════════════════════════════════════════════════════════════"
-          echo "📋 PREVIEW OF MESSAGE CONTENT:"
-          echo "═══════════════════════════════════════════════════════════════"
-          echo ""
-          cat "$MESSAGE_FILE"
-          echo ""
+    - name: Preview Message
+      if: ${{ inputs.test_mode == 'true' }}
+      shell: bash
+      run: |
+        chmod +x "${{ github.action_path }}/scripts/preview-message.sh"
+        "${{ github.action_path }}/scripts/preview-message.sh" \
+          "${{ steps.message.outputs.MESSAGE_FILE }}" \
+          "${{ steps.names.outputs.NAMES_FILE }}" \
+          "${{ inputs.clickup_workspace_id }}" \
+          "${{ inputs.clickup_channel_id }}"
+        rm -f "${{ steps.message.outputs.MESSAGE_FILE }}" "${{ steps.names.outputs.NAMES_FILE }}" "${{ inputs.commit_file }}"
 
-          # Try to resolve workspace and channel names
-          WORKSPACE_NAME="${{ inputs.clickup_workspace_id }}"
-          CHANNEL_NAME="${{ inputs.clickup_channel_id }}"
-
-          # Get workspace name from teams API
-          TEAMS_RESPONSE=$(curl -s -H "Authorization: ${{ inputs.clickup_api_token }}" \
-            "https://api.clickup.com/api/v2/team" 2>/dev/null || echo "")
-
-          if [ -n "$TEAMS_RESPONSE" ]; then
-            WORKSPACE_NAME=$(echo "$TEAMS_RESPONSE" | jq -r ".teams[] | select(.id == \"${{ inputs.clickup_workspace_id }}\") | .name" 2>/dev/null || echo "${{ inputs.clickup_workspace_id }}")
-          fi
-
-          # Get channel name from channels API
-          CHANNELS_RESPONSE=$(curl -s -H "Authorization: ${{ inputs.clickup_api_token }}" \
-            "https://api.clickup.com/api/v3/workspaces/${{ inputs.clickup_workspace_id }}/chat/channels" 2>/dev/null || echo "")
-
-          if [ -n "$CHANNELS_RESPONSE" ]; then
-            CHANNEL_NAME=$(echo "$CHANNELS_RESPONSE" | jq -r ".channels[] | select(.id == \"${{ inputs.clickup_channel_id }}\") | .name" 2>/dev/null || echo "${{ inputs.clickup_channel_id }}")
-          fi
-
-          MESSAGE_LENGTH=$(cat "$MESSAGE_FILE" | wc -c)
-
-          echo "═══════════════════════════════════════════════════════════════"
-          echo "📝 MESSAGE DETAILS:"
-          echo "═══════════════════════════════════════════════════════════════"
-          echo "• Destination: $WORKSPACE_NAME (${{ inputs.clickup_workspace_id }}), $CHANNEL_NAME (${{ inputs.clickup_channel_id }})"
-          echo "• Content Format: text/md"
-          echo "• Character Count: $MESSAGE_LENGTH characters"
-          echo "• API Token: Provided (hidden for security)"
-          echo ""
-          echo "⚠️  TEST MODE: No actual API call made to ClickUp"
-          echo "    Set test_mode to \"false\" to send this message"
-          echo "═══════════════════════════════════════════════════════════════"
-
-          rm -f "$MESSAGE_FILE" "$PAYLOAD_FILE" "$COMMIT_FILE"
-          exit 0
-        fi
-
-        RESPONSE_FILE=$(mktemp)
-        HTTP_CODE=$(curl -s -o "$RESPONSE_FILE" -w "%{http_code}" \
-          -X POST \
-          -H "Content-Type: application/json" \
-          -H "Authorization: ${{ inputs.clickup_api_token }}" \
-          -d @"$PAYLOAD_FILE" \
-          "https://api.clickup.com/api/v3/workspaces/${{ inputs.clickup_workspace_id }}/chat/channels/${{ inputs.clickup_channel_id }}/messages")
-
-        rm -f "$MESSAGE_FILE" "$PAYLOAD_FILE" "$COMMIT_FILE" "$RESPONSE_FILE"
-
-        if [[ "$HTTP_CODE" -ge 200 && "$HTTP_CODE" -lt 300 ]]; then
-          echo "--- ClickUp notification sent successfully ---"
-        else
-          echo "::error::Failed to send notification to ClickUp. HTTP code: $HTTP_CODE"
-          exit 1
-        fi
+    - name: Send to ClickUp
+      if: ${{ inputs.test_mode != 'true' }}
+      shell: bash
+      run: |
+        chmod +x "${{ github.action_path }}/scripts/send-to-clickup.sh"
+        "${{ github.action_path }}/scripts/send-to-clickup.sh" \
+          "${{ steps.message.outputs.MESSAGE_FILE }}" \
+          "${{ inputs.clickup_api_token }}" \
+          "${{ inputs.clickup_workspace_id }}" \
+          "${{ inputs.clickup_channel_id }}"
+        rm -f "${{ steps.message.outputs.MESSAGE_FILE }}" "${{ inputs.commit_file }}"
