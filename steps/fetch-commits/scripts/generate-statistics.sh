@@ -71,8 +71,8 @@ fi
 # Build statistics table
 STATS_TABLE="\n\n📊 **Stats:**\n\n"
 STATS_TABLE+="|--------|-------|\n"
-STATS_TABLE+="| 📝 Commits | $TOTAL_COMMITS |\n"
-STATS_TABLE+="| 📁 Files | $FILES_CHANGED |\n"
+STATS_TABLE+="| 📝 Count | $TOTAL_COMMITS Commits |\n"
+STATS_TABLE+="| 📁 Changed | $FILES_CHANGED files |\n"
 STATS_TABLE+="| ➕ Added | +$LINES_ADDED lines |\n"
 STATS_TABLE+="| ➖ Removed | -$LINES_REMOVED lines |\n"
 STATS_TABLE+="| ⏰ Last Deploy | $TIME_SINCE |\n"

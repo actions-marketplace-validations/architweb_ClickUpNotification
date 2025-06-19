@@ -8,9 +8,16 @@ WORKSPACE_ID="$2"
 CHANNEL_ID="$3"
 OUTPUT_FILE="$4"
 
-# Default to IDs
+# Default to IDs, but handle masked values
 WORKSPACE_NAME="$WORKSPACE_ID"
 CHANNEL_NAME="$CHANNEL_ID"
+
+# Don't try to resolve if token or IDs are masked
+if [ "$API_TOKEN" = "***" ] || [ "$WORKSPACE_ID" = "***" ] || [ "$CHANNEL_ID" = "***" ]; then
+  echo "WORKSPACE_NAME=$WORKSPACE_NAME" > "$OUTPUT_FILE"
+  echo "CHANNEL_NAME=$CHANNEL_NAME" >> "$OUTPUT_FILE"
+  exit 0
+fi
 
 # Try to resolve workspace name from teams API
 TEAMS_RESPONSE=$(curl -s -H "Authorization: $API_TOKEN" \
