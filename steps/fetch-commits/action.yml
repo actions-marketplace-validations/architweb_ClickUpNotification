@@ -82,12 +82,11 @@ runs:
                         REST="${MESSAGE#$PREFIX }"
                         MESSAGE="**${PREFIX}** ${REST}"
                       fi
-
                       FINAL_COMMIT_BLOCK="* ${MESSAGE}"
                     fi
 
                     KEY="${AUTHOR}::${FINAL_COMMIT_BLOCK}"
-                    if [[ ! "$FINAL_COMMIT_BLOCK" =~ ^[Mm]erge ]]; then
+                    if [[ ! "$FINAL_COMMIT_BLOCK" =~ ^\*[[:space:]]+[Mm]erge[[:space:]]+branch ]]; then
                       IS_UNIQUE=true
                       for existing_key in "${UNIQUE_KEYS[@]}"; do
                         if [[ "$existing_key" == "$KEY" ]]; then
