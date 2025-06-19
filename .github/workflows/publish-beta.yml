@@ -3,7 +3,7 @@ name: Create Release
 on:
   push:
     branches:
-      - release/production
+      - release/beta
 
 jobs:
   release:
@@ -17,7 +17,7 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
         with:
-          ref: "release/production"
+          ref: "release/beta"
           fetch-depth: 0
 
       - name: 📦 Get version from CHANGELOG
@@ -63,12 +63,13 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: 🆕 Create Release
+      - name: 🆕 Create beta Release
         if: steps.check-tag.outputs.exists == 'false'
         run: |
           gh release create "${{ steps.package-info.outputs.version }}" \
             --title "Release ${{ steps.package-info.outputs.version }}" \
-            --notes-file changelog_section.md
+            --notes-file changelog_section.md \
+            --prerelease
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -86,10 +87,10 @@ jobs:
           clickup_workspace_id: ${{ secrets.CLICKUP_WORKSPACE_ID }}
           clickup_channel_id: ${{ secrets.CLICKUP_CHANNEL_ID }}
           clickup_project_name: ${{ secrets.CLICKUP_PROJECT_NAME }}
-          title: "Release ${{ steps.package-info.outputs.version }} Submitted"
+          title: "**BETA** | Release ${{ steps.package-info.outputs.version }} Submitted"
           description: |
             **📊 Details:**
             • **Package:** "${{ steps.package-info.outputs.name }}@${{ steps.package-info.outputs.version }}"
             • **Workflow status:** ${{ job.status == 'success' && '✅ Success' || job.status == 'failure' && '❌ Failed' || '⚠️ Cancelled' }}
             • **Release status:** ${{ steps.check-tag.outputs.exists == 'true' && '❌ Skipped' || '✅ Created' }}
-          full_commit_message: "false"
+          full_commit_message: "true"
