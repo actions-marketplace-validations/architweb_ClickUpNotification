@@ -101,7 +101,7 @@ Where the task ID becomes a clickable link to the task in ClickUp. This makes it
 Enable detailed deployment metrics with `show_commit_statistics: "true"`:
 
 ```yaml
-- uses: architweb/ClickUpNotification@v3.0.0
+- uses: architweb/ClickUpNotification@v3.0.1
   with:
     # ... other inputs ...
     show_commit_statistics: "true"
@@ -121,7 +121,7 @@ Enable detailed deployment metrics with `show_commit_statistics: "true"`:
 Preview notifications without sending to ClickUp:
 
 ```yaml
-- uses: architweb/ClickUpNotification@v3.0.0
+- uses: architweb/ClickUpNotification@v3.0.1
   with:
     # ... other inputs ...
     test_mode: "true"
@@ -139,7 +139,7 @@ Preview notifications without sending to ClickUp:
 Fine-tune how commits are displayed:
 
 ```yaml
-- uses: architweb/ClickUpNotification@v3.0.0
+- uses: architweb/ClickUpNotification@v3.0.1
   with:
     # ... other inputs ...
     sort_commits_alphabetically: "true" # Sort commits A-Z
@@ -228,7 +228,7 @@ jobs:
 
       # Last step: Send ClickUp notification upon successful deployment
       - name: Send ClickUp Notification
-        uses: architweb/ClickUpNotification@v3.0.0 # Use the latest version of the action
+        uses: architweb/ClickUpNotification@v3.0.1 # Use the latest version of the action
         with:
           # Pass the required secrets to the action
           clickup_api_token: ${{ secrets.CLICKUP_API_TOKEN }}
@@ -254,7 +254,7 @@ Perfect for production deployments where you want comprehensive metrics:
 
 ```yaml
 - name: Production Deployment Notification
-  uses: architweb/ClickUpNotification@v3.0.0
+  uses: architweb/ClickUpNotification@v3.0.1
   with:
     clickup_api_token: ${{ secrets.CLICKUP_API_TOKEN }}
     clickup_workspace_id: ${{ secrets.CLICKUP_WORKSPACE_ID }}
@@ -273,7 +273,7 @@ Preview notifications during development:
 
 ```yaml
 - name: Test Notification Format
-  uses: architweb/ClickUpNotification@v3.0.0
+  uses: architweb/ClickUpNotification@v3.0.1
   with:
     clickup_api_token: ${{ secrets.CLICKUP_API_TOKEN }}
     clickup_workspace_id: ${{ secrets.CLICKUP_WORKSPACE_ID }}
@@ -290,7 +290,7 @@ Perfect for quick status updates:
 
 ```yaml
 - name: Quick Status Update
-  uses: architweb/ClickUpNotification@v3.0.0
+  uses: architweb/ClickUpNotification@v3.0.1
   with:
     clickup_api_token: ${{ secrets.CLICKUP_API_TOKEN }}
     clickup_workspace_id: ${{ secrets.CLICKUP_WORKSPACE_ID }}
@@ -308,7 +308,7 @@ Comprehensive notification for important deployments:
 
 ```yaml
 - name: Production Release Notification
-  uses: architweb/ClickUpNotification@v3.0.0
+  uses: architweb/ClickUpNotification@v3.0.1
   with:
     clickup_api_token: ${{ secrets.CLICKUP_API_TOKEN }}
     clickup_workspace_id: ${{ secrets.CLICKUP_WORKSPACE_ID }}
