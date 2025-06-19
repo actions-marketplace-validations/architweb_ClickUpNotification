@@ -80,7 +80,7 @@ jobs:
 
       - name: 📢 Send ClickUp Notification
         if: always()
-        uses: architweb/ClickUpNotification@v2.0.1
+        uses: architweb/ClickUpNotification@v3.0.0
         with:
           clickup_api_token: ${{ secrets.CLICKUP_API_TOKEN }}
           clickup_workspace_id: ${{ secrets.CLICKUP_WORKSPACE_ID }}
@@ -92,4 +92,6 @@ jobs:
             • **Package:** "${{ steps.package-info.outputs.name }}@${{ steps.package-info.outputs.version }}"
             • **Workflow status:** ${{ job.status == 'success' && '✅ Success' || job.status == 'failure' && '❌ Failed' || '⚠️ Cancelled' }}
             • **Release status:** ${{ steps.check-tag.outputs.exists == 'true' && '❌ Skipped' || '✅ Created' }}
+            • **Check at:** https://github.com/architweb/ClickUpNotification/releases/tag/${{ steps.package-info.outputs.version }}
           full_commit_message: "false"
+          show_commit_statistics: "true"
