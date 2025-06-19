@@ -19,6 +19,14 @@ inputs:
   clickup_project_name:
     description: "ClickUp Project Name for the message"
     required: true
+  title:
+    description: "Custom title for the notification message"
+    required: false
+    default: ""
+  description:
+    description: "Custom description for the notification message"
+    required: false
+    default: ""
   show_fetch_duration:
     description: "Show duration information in the notification"
     required: false
@@ -35,14 +43,10 @@ inputs:
     description: "Sort commits alphabetically by commit message (A-Z)"
     required: false
     default: "true"
-  title:
-    description: "Custom title for the notification message"
+  show_commit_statistics:
+    description: "Show commit statistics in the notification"
     required: false
-    default: ""
-  description:
-    description: "Custom description for the notification message"
-    required: false
-    default: ""
+    default: "false"
 
 runs:
   using: "composite"
@@ -68,6 +72,7 @@ runs:
       with:
         full_commit_message: ${{ inputs.full_commit_message }}
         sort_commits_alphabetically: ${{ inputs.sort_commits_alphabetically }}
+        show_commit_statistics: ${{ inputs.show_commit_statistics }}
 
     - name: 📢 Send ClickUp Notification
       uses: architweb/ClickUpNotification/steps/send-notification@v2.0.1
