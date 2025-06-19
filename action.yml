@@ -1,5 +1,4 @@
 name: "Send ClickUp Notification Action"
-
 description: "Fetches commit history (if possible) and sends a notification to ClickUp."
 
 branding:
@@ -47,6 +46,10 @@ inputs:
     description: "Show commit statistics in the notification"
     required: false
     default: "false"
+  test_mode:
+    description: "Test mode - preview message without sending to ClickUp"
+    required: false
+    default: "false"
 
 runs:
   using: "composite"
@@ -83,5 +86,6 @@ runs:
         clickup_project_name: ${{ inputs.clickup_project_name }}
         title: ${{ inputs.title }}
         description: ${{ inputs.description }}
+        test_mode: ${{ inputs.test_mode }}
         formatted_duration: ${{ inputs.show_fetch_duration == 'true' && steps.duration.outputs.formatted_duration || 'unknown' }}
         commit_file: ${{ inputs.show_changelog_commits == 'true' && steps.commits.outputs.commit_file || '' }}

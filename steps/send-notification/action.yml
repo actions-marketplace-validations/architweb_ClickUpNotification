@@ -14,14 +14,6 @@ inputs:
   clickup_project_name:
     description: "ClickUp Project Name for the message"
     required: true
-  formatted_duration:
-    description: "Formatted duration from duration step"
-    required: false
-    default: "unknown"
-  commit_file:
-    description: "Path to commit changelog file"
-    required: false
-    default: ""
   title:
     description: "Custom title for the notification message"
     required: false
@@ -30,6 +22,18 @@ inputs:
     description: "Custom description for the notification message"
     required: false
     default: ""
+  formatted_duration:
+    description: "Formatted duration from duration step"
+    required: false
+    default: "unknown"
+  commit_file:
+    description: "Path to commit changelog file"
+    required: false
+    default: ""
+  test_mode:
+    description: "Test mode - preview message without sending to ClickUp"
+    required: false
+    default: "false"
 
 runs:
   using: "composite"
@@ -39,6 +43,7 @@ runs:
       run: |
         FORMATTED_DURATION="${{ inputs.formatted_duration }}"
         COMMIT_FILE="${{ inputs.commit_file }}"
+        TEST_MODE="${{ inputs.test_mode }}"
 
         TRIGGERING_USER_NAME=$(curl -sf -H "Authorization: Bearer ${GITHUB_TOKEN}" \
           -H "Accept: application/vnd.github.v3+json" \
@@ -80,6 +85,54 @@ runs:
           content_format: "text/md",
           content: $content
         }' > "$PAYLOAD_FILE"
+
+        if [ "$TEST_MODE" == "true" ]; then
+          echo "🧪 TEST MODE ENABLED - Message preview (NOT SENT to ClickUp)"
+          echo ""
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "📋 PREVIEW OF MESSAGE CONTENT:"
+          echo "═══════════════════════════════════════════════════════════════"
+          echo ""
+          cat "$MESSAGE_FILE"
+          echo ""
+
+          # Try to resolve workspace and channel names
+          WORKSPACE_NAME="${{ inputs.clickup_workspace_id }}"
+          CHANNEL_NAME="${{ inputs.clickup_channel_id }}"
+
+          # Get workspace name from teams API
+          TEAMS_RESPONSE=$(curl -s -H "Authorization: ${{ inputs.clickup_api_token }}" \
+            "https://api.clickup.com/api/v2/team" 2>/dev/null || echo "")
+
+          if [ -n "$TEAMS_RESPONSE" ]; then
+            WORKSPACE_NAME=$(echo "$TEAMS_RESPONSE" | jq -r ".teams[] | select(.id == \"${{ inputs.clickup_workspace_id }}\") | .name" 2>/dev/null || echo "${{ inputs.clickup_workspace_id }}")
+          fi
+
+          # Get channel name from channels API
+          CHANNELS_RESPONSE=$(curl -s -H "Authorization: ${{ inputs.clickup_api_token }}" \
+            "https://api.clickup.com/api/v3/workspaces/${{ inputs.clickup_workspace_id }}/chat/channels" 2>/dev/null || echo "")
+
+          if [ -n "$CHANNELS_RESPONSE" ]; then
+            CHANNEL_NAME=$(echo "$CHANNELS_RESPONSE" | jq -r ".channels[] | select(.id == \"${{ inputs.clickup_channel_id }}\") | .name" 2>/dev/null || echo "${{ inputs.clickup_channel_id }}")
+          fi
+
+          MESSAGE_LENGTH=$(cat "$MESSAGE_FILE" | wc -c)
+
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "📝 MESSAGE DETAILS:"
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "• Destination: $WORKSPACE_NAME (${{ inputs.clickup_workspace_id }}), $CHANNEL_NAME (${{ inputs.clickup_channel_id }})"
+          echo "• Content Format: text/md"
+          echo "• Character Count: $MESSAGE_LENGTH characters"
+          echo "• API Token: Provided (hidden for security)"
+          echo ""
+          echo "⚠️  TEST MODE: No actual API call made to ClickUp"
+          echo "    Set test_mode to \"false\" to send this message"
+          echo "═══════════════════════════════════════════════════════════════"
+
+          rm -f "$MESSAGE_FILE" "$PAYLOAD_FILE" "$COMMIT_FILE"
+          exit 0
+        fi
 
         RESPONSE_FILE=$(mktemp)
         HTTP_CODE=$(curl -s -o "$RESPONSE_FILE" -w "%{http_code}" \
