@@ -2,6 +2,9 @@ name: "📢 Send ClickUp Notification"
 description: "Sends notification to ClickUp with deployment information"
 
 inputs:
+  action_repo_path:
+    description: "Path to the main action repository"
+    required: true
   clickup_api_token:
     description: "ClickUp API Token"
     required: true
@@ -43,8 +46,8 @@ runs:
       shell: bash
       run: |
         USER_INFO=$(mktemp)
-        chmod +x "${{ github.action_path }}/scripts/get-user-info.sh"
-        "${{ github.action_path }}/scripts/get-user-info.sh" "$USER_INFO"
+        chmod +x "${{ inputs.action_repo_path }}/steps/send-notification/scripts/get-user-info.sh"
+        "${{ inputs.action_repo_path }}/steps/send-notification/scripts/get-user-info.sh" "$USER_INFO"
         echo "USER_INFO=$USER_INFO" >> $GITHUB_OUTPUT
 
     - name: Build Message
@@ -52,8 +55,8 @@ runs:
       shell: bash
       run: |
         MESSAGE_FILE=$(mktemp)
-        chmod +x "${{ github.action_path }}/scripts/build-message.sh"
-        "${{ github.action_path }}/scripts/build-message.sh" \
+        chmod +x "${{ inputs.action_repo_path }}/steps/send-notification/scripts/build-message.sh"
+        "${{ inputs.action_repo_path }}/steps/send-notification/scripts/build-message.sh" \
           "${{ steps.user-info.outputs.USER_INFO }}" \
           "${{ inputs.title }}" \
           "${{ inputs.description }}" \
@@ -68,8 +71,8 @@ runs:
       shell: bash
       run: |
         NAMES_FILE=$(mktemp)
-        chmod +x "${{ github.action_path }}/scripts/resolve-names.sh"
-        "${{ github.action_path }}/scripts/resolve-names.sh" \
+        chmod +x "${{ inputs.action_repo_path }}/steps/send-notification/scripts/resolve-names.sh"
+        "${{ inputs.action_repo_path }}/steps/send-notification/scripts/resolve-names.sh" \
           "${{ inputs.clickup_api_token }}" \
           "${{ inputs.clickup_workspace_id }}" \
           "${{ inputs.clickup_channel_id }}" \
@@ -80,8 +83,8 @@ runs:
       if: ${{ inputs.test_mode == 'true' }}
       shell: bash
       run: |
-        chmod +x "${{ github.action_path }}/scripts/preview-message.sh"
-        "${{ github.action_path }}/scripts/preview-message.sh" \
+        chmod +x "${{ inputs.action_repo_path }}/steps/send-notification/scripts/preview-message.sh"
+        "${{ inputs.action_repo_path }}/steps/send-notification/scripts/preview-message.sh" \
           "${{ steps.message.outputs.MESSAGE_FILE }}" \
           "${{ steps.names.outputs.NAMES_FILE }}" \
           "${{ inputs.clickup_workspace_id }}" \
@@ -92,8 +95,8 @@ runs:
       if: ${{ inputs.test_mode != 'true' }}
       shell: bash
       run: |
-        chmod +x "${{ github.action_path }}/scripts/send-to-clickup.sh"
-        "${{ github.action_path }}/scripts/send-to-clickup.sh" \
+        chmod +x "${{ inputs.action_repo_path }}/steps/send-notification/scripts/send-to-clickup.sh"
+        "${{ inputs.action_repo_path }}/steps/send-notification/scripts/send-to-clickup.sh" \
           "${{ steps.message.outputs.MESSAGE_FILE }}" \
           "${{ inputs.clickup_api_token }}" \
           "${{ inputs.clickup_workspace_id }}" \
