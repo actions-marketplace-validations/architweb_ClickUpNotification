@@ -1,11 +1,5 @@
 # Changelog
 
-## [v3.0.1] - 2025-06-20
-
-### 🐛 Critical Bug Fixes
-
-- **Fixed Relative Path Resolution**: Corrected path resolution issues in GitHub Actions environment
-
 ## [v3.0.0] - 2025-06-19
 
 ### 🚀 Major Features
