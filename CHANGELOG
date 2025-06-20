@@ -1,5 +1,20 @@
 # Changelog
 
+## [v3.0.1] - 2025-06-20
+
+### 🐛 Bug Fixes
+
+- **🔗 ClickUp Desktop App Compatibility**: Fixed task link formatting issue where backticks in link text caused problems with ClickUp desktop app while maintaining perfect web compatibility
+- **🧹 Code Refactoring**: Eliminated code duplication in commit processing by extracting helper functions for task link formatting and conventional commit handling
+- **📝 Improved Maintainability**: Consolidated duplicate regex patterns and sed commands into reusable functions
+
+### 🔧 Technical Improvements
+
+- **Helper Functions**: Added `format_task_links()` and `format_conventional_commit()` functions
+- **Constants**: Extracted conventional commit types into a reusable constant
+- **DRY Principle**: Removed duplicate code while maintaining identical functionality
+- **Enhanced Link Format**: Changed task links from `[\`ID\`]`to`[**_ID_**]` for better cross-platform compatibility
+
 ## [v3.0.0] - 2025-06-19
 
 ### 🚀 Major Features

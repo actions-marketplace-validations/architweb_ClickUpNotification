@@ -69,13 +69,19 @@ else
 fi
 
 # Build statistics table
-STATS_TABLE="\n\n📊 **Stats:**\n\n"
-STATS_TABLE+="|--------|-------|\n"
-STATS_TABLE+="| 📝 Count | $TOTAL_COMMITS Commits |\n"
-STATS_TABLE+="| 📁 Changed | $FILES_CHANGED files |\n"
-STATS_TABLE+="| ➕ Added | +$LINES_ADDED lines |\n"
-STATS_TABLE+="| ➖ Removed | -$LINES_REMOVED lines |\n"
-STATS_TABLE+="| ⏰ Last Deploy | $TIME_SINCE |\n"
-STATS_TABLE+="| 👥 Contributors | $UNIQUE_AUTHORS |"
+STATS_TABLE="\n\n📊 **Stats:**\n"
+STATS_TABLE+="|--------------|------------------------|\n"
+STATS_TABLE+="| Count        | $TOTAL_COMMITS Commits |\n"
+STATS_TABLE+="|--------------|------------------------|\n"
+STATS_TABLE+="| Changed      | $FILES_CHANGED files   |\n"
+STATS_TABLE+="|--------------|------------------------|\n"
+STATS_TABLE+="| Added        | +$LINES_ADDED lines    |\n"
+STATS_TABLE+="|--------------|------------------------|\n"
+STATS_TABLE+="| Removed      | +$LINES_REMOVED lines  |\n"
+STATS_TABLE+="|--------------|------------------------|\n"
+STATS_TABLE+="| Last Deploy  | $TIME_SINCE            |\n"
+STATS_TABLE+="|--------------|------------------------|\n"
+STATS_TABLE+="| Contributors | $UNIQUE_AUTHORS        |\n"
+STATS_TABLE+="|--------------|------------------------|\n"
 
 echo "$STATS_TABLE" > "$OUTPUT_FILE"

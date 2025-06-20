@@ -50,21 +50,33 @@ jobs:
               END_LINE=$((NEXT_LINE - 1))
               sed -n "${START_LINE},${END_LINE}p" CHANGELOG > changelog_section.md
             fi
-          fi
+          fi          echo "changelog_file=changelog_section.md" >> $GITHUB_OUTPUT
 
-          echo "changelog_file=changelog_section.md" >> $GITHUB_OUTPUT
-
-      - name: 🔃 Check if tag exists
+      - name: 🔃 Check if tag/release exists
         id: check-tag
         run: |
-          if git rev-parse "${{ steps.package-info.outputs.version }}" >/dev/null 2>&1; then
+          VERSION="${{ steps.package-info.outputs.version }}"
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
+            PRERELEASE=$(gh release view "$VERSION" --json isPrerelease --jq '.isPrerelease' 2>/dev/null || echo "false")
+            echo "is_prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
+            if [ "$PRERELEASE" = "true" ]; then
+              echo "action=update_to_latest" >> $GITHUB_OUTPUT
+              echo "Found prerelease $VERSION - will update to latest release"
+            else
+              echo "action=abort" >> $GITHUB_OUTPUT
+              echo "Found stable release $VERSION - will abort"
+            fi
           else
             echo "exists=false" >> $GITHUB_OUTPUT
+            echo "action=create_new" >> $GITHUB_OUTPUT
+            echo "Tag $VERSION does not exist - will create new release"
           fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🆕 Create Release
-        if: steps.check-tag.outputs.exists == 'false'
+      - name: 🆕 Create New Release
+        if: steps.check-tag.outputs.action == 'create_new'
         run: |
           gh release create "${{ steps.package-info.outputs.version }}" \
             --title "Release ${{ steps.package-info.outputs.version }}" \
@@ -72,10 +84,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: ❌ Abort - Release Already Exists
-        if: steps.check-tag.outputs.exists == 'true'
+      - name: 🔄 Update Prerelease to Latest
+        if: steps.check-tag.outputs.action == 'update_to_latest'
         run: |
-          echo "::error::Release ${{ steps.package-info.outputs.version }} already exists."
+          gh release edit "${{ steps.package-info.outputs.version }}" \
+            --prerelease=false \
+            --latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: ❌ Abort - Stable Release Already Exists
+        if: steps.check-tag.outputs.action == 'abort'
+        run: |
+          echo "::error::Stable release ${{ steps.package-info.outputs.version }} already exists."
           exit 1
 
       - name: 📢 Send ClickUp Notification
@@ -91,7 +112,13 @@ jobs:
             **📊 Details:**
             • **Package:** "${{ steps.package-info.outputs.name }}@${{ steps.package-info.outputs.version }}"
             • **Workflow status:** ${{ job.status == 'success' && '✅ Success' || job.status == 'failure' && '❌ Failed' || '⚠️ Cancelled' }}
-            • **Release status:** ${{ steps.check-tag.outputs.exists == 'true' && '❌ Skipped' || '✅ Created' }}
+            • **Release status:** ${{
+              steps.check-tag.outputs.action == 'create_new' && '✅ Created New Release' ||
+              steps.check-tag.outputs.action == 'update_to_latest' && '🔄 Updated Prerelease to Latest' ||
+              steps.check-tag.outputs.action == 'abort' && '❌ Skipped (Stable Release Exists)' ||
+              '⚠️ Unknown'
+            }}
+            • **Release type:** ${{ steps.check-tag.outputs.is_prerelease == 'true' && '🚧 Prerelease' || '✅ Stable' }}
             • **Check at:** https://github.com/architweb/ClickUpNotification/releases/tag/${{ steps.package-info.outputs.version }}
           full_commit_message: "false"
           show_commit_statistics: "true"
