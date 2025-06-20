@@ -33,6 +33,7 @@ jobs:
           echo "name=$NAME" >> $GITHUB_OUTPUT
           echo "Found version: $VERSION"
 
+
       - name: 📄 Extract latest changelog
         id: changelog
         run: |
@@ -50,7 +51,8 @@ jobs:
               END_LINE=$((NEXT_LINE - 1))
               sed -n "${START_LINE},${END_LINE}p" CHANGELOG > changelog_section.md
             fi
-          fi          echo "changelog_file=changelog_section.md" >> $GITHUB_OUTPUT
+          fi
+          echo "changelog_file=changelog_section.md" >> $GITHUB_OUTPUT
 
       - name: 🔃 Check if tag/release exists
         id: check-tag
