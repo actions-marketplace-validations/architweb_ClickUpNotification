@@ -8,6 +8,35 @@ FULL_COMMIT_MESSAGE="$2"
 SORT_ALPHABETICALLY="$3"
 OUTPUT_FILE="$4"
 
+# Constants
+CONVENTIONAL_COMMIT_TYPES="build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test"
+
+# Helper function to format task links
+format_task_links() {
+  local message="$1"
+  message=$(echo "$message" | sed -E "s/ctask \`([A-Za-z0-9\-]+)\`/[**_\1_**](https:\/\/app.clickup.com\/t\/${CLICKUP_WORKSPACE_ID}\/\1)/g")
+  message=$(echo "$message" | sed -E "s/task \`([0-9a-z]+)\`/[**_\1_**](https:\/\/app.clickup.com\/t\/\1)/g")
+  echo "$message"
+}
+
+# Helper function to format conventional commits
+format_conventional_commit() {
+  local text="$1"
+  local is_header="$2"
+
+  if echo "$text" | grep -Eq "^(${CONVENTIONAL_COMMIT_TYPES})(\([^)]+\))?(!)?:"; then
+    if [[ "$is_header" == "true" ]]; then
+      echo "**${text}**"
+    else
+      local prefix=$(echo "$text" | grep -oE "^(${CONVENTIONAL_COMMIT_TYPES})(\([^)]+\))?(!)?:")
+      local rest="${text#$prefix }"
+      echo "**${prefix}** ${rest}"
+    fi
+  else
+    echo "$text"
+  fi
+}
+
 COMMITS_JSON=$(cat "$COMMITS_FILE")
 
 if [ "$COMMITS_JSON" = "[]" ] || [ -z "$COMMITS_JSON" ]; then
@@ -32,21 +61,15 @@ for ((i=0; i<COMMIT_COUNT; i++)); do
   AUTHOR=$(echo "$AUTHOR" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
   [ -z "$AUTHOR" ] && AUTHOR="Unknown Contributor"
 
-  # Ensure AUTHOR is properly quoted to prevent command execution
   AUTHOR=$(printf '%s' "$AUTHOR")
-
   if [[ "$FULL_COMMIT_MESSAGE" == "true" ]]; then
     RAW_MESSAGE=$(echo "$COMMITS_JSON" | jq -r ".[$i].message")
-
-    FORMATTED_MESSAGE=$(echo "$RAW_MESSAGE" | sed -E "s/ctask \`([A-Za-z0-9\-]+)\`/[**_\1_**](https:\/\/app.clickup.com\/t\/${CLICKUP_WORKSPACE_ID}\/\1)/g")
-    FORMATTED_MESSAGE=$(echo "$FORMATTED_MESSAGE" | sed -E "s/task \`([0-9a-z]+)\`/[**_\1_**](https:\/\/app.clickup.com\/t\/\1)/g")
+    FORMATTED_MESSAGE=$(format_task_links "$RAW_MESSAGE")
 
     HEADER_LINE=$(echo "$FORMATTED_MESSAGE" | sed -n '1p')
     BODY_LINES=$(echo "$FORMATTED_MESSAGE" | sed '1d')
 
-    if echo "$HEADER_LINE" | grep -Eq '^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?(!)?:'; then
-      HEADER_LINE="**${HEADER_LINE}**"
-    fi
+    HEADER_LINE=$(format_conventional_commit "$HEADER_LINE" "true")
 
     if echo "$BODY_LINES" | grep -qE '^\s*[\*\-\+]'; then
       INDENTED_BODY=$(echo "$BODY_LINES" | sed -E 's/^\s*([\*\-\+])/    \1   /')
@@ -59,15 +82,8 @@ for ((i=0; i<COMMIT_COUNT; i++)); do
 
   else
     MESSAGE=$(echo "$COMMITS_JSON" | jq -r ".[$i].message" | sed -n '1p')
-
-    MESSAGE=$(echo "$MESSAGE" | sed -E "s/ctask \`([A-Za-z0-9\-]+)\`/[**_\1_**](https:\/\/app.clickup.com\/t\/${CLICKUP_WORKSPACE_ID}\/\1)/g")
-    MESSAGE=$(echo "$MESSAGE" | sed -E "s/task \`([0-9a-z]+)\`/[**_\1_**](https:\/\/app.clickup.com\/t\/\1)/g")
-
-    if echo "$MESSAGE" | grep -qE '^((build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?(!)?:)'; then
-      PREFIX=$(echo "$MESSAGE" | grep -oE '^((build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?(!)?:)')
-      REST="${MESSAGE#$PREFIX }"
-      MESSAGE="**${PREFIX}** ${REST}"
-    fi
+    MESSAGE=$(format_task_links "$MESSAGE")
+    MESSAGE=$(format_conventional_commit "$MESSAGE" "false")
 
     FINAL_COMMIT_BLOCK="* ${MESSAGE}"
   fi
