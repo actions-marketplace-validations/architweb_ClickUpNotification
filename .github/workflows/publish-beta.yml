@@ -93,6 +93,6 @@ jobs:
             • **Package:** "${{ steps.package-info.outputs.name }}@${{ steps.package-info.outputs.version }}"
             • **Workflow status:** ${{ job.status == 'success' && '✅ Success' || job.status == 'failure' && '❌ Failed' || '⚠️ Cancelled' }}
             • **Release status:** ${{ steps.check-tag.outputs.exists == 'true' && '❌ Skipped' || '✅ Created' }}
-            • **Check at:** https://github.com/architweb/ClickUpNotification/releases/tag/${{ steps.package-info.outputs.version }}
+            ${{ job.status == 'success' && format('• **Check at:** https://github.com/architweb/ClickUpNotification/releases/tag/{0}', steps.package-info.outputs.version) || '' }}
           show_commit_statistics: "true"
           test_mode: "true"
