@@ -14,8 +14,8 @@ CONVENTIONAL_COMMIT_TYPES="build|chore|ci|docs|feat|fix|perf|refactor|revert|sty
 # Helper function to format task links
 format_task_links() {
   local message="$1"
-  message=$(echo "$message" | sed -E "s/ctask \`([A-Za-z0-9\-]+)\`/[**_\1_**](https:\/\/app.clickup.com\/t\/${CLICKUP_WORKSPACE_ID}\/\1)/g")
-  message=$(echo "$message" | sed -E "s/task \`([0-9a-z]+)\`/[**_\1_**](https:\/\/app.clickup.com\/t\/\1)/g")
+  message=$(echo "$message" | sed -E "s/ctask \`([A-Za-z0-9\-]+)\`/[\1](https:\/\/app.clickup.com\/t\/${CLICKUP_WORKSPACE_ID}\/\1)/g")
+  message=$(echo "$message" | sed -E "s/task \`([A-Za-z0-9\-]+)\`/[\1](https:\/\/app.clickup.com\/t\/\1)/g")
   echo "$message"
 }
 
