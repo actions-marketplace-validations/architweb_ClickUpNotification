@@ -62,7 +62,7 @@ for ((i=0; i<COMMIT_COUNT; i++)); do
     RAW_MESSAGE=$(echo "$COMMITS_JSON" | jq -r ".[$i].message")
     FORMATTED_MESSAGE=$(format_task_links "$RAW_MESSAGE")
 
-    HEADER_LINE=$(echo "$FORMATTED_MESSAGE" | sed -n '1p')
+    HEADER_LINE=$(echo "$FORMATTED_MESSAGE" | sed -n '1p') 
     BODY_LINES=$(echo "$FORMATTED_MESSAGE" | sed '1d')
 
     HEADER_LINE=$(format_conventional_commit "$HEADER_LINE" "true")
