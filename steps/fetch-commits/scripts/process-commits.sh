@@ -9,7 +9,7 @@ SORT_ALPHABETICALLY="$3"
 OUTPUT_FILE="$4"
 
 # Constants
-CONVENTIONAL_COMMIT_TYPES="build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test|release|security|deps|config|hotfix|ui|api"
+CONVENTIONAL_COMMIT_TYPES="build|chore|docs|feat|fix|refactor|revert|style|test|release|security|deps|api"
 
 # Helper function to format task links
 format_task_links() {
@@ -118,7 +118,7 @@ for ((i=0; i<COMMIT_COUNT; i++)); do
         AUTHOR_COMMITS_LIST+=("${FINAL_COMMIT_BLOCK}"$'\n\n')
       fi
     fi
-  fi 
+  fi
 done
 
 # Build changelog
