@@ -31,7 +31,7 @@ format_conventional_commit() {
   else
     echo "$text"
   fi
-}
+} 
 
 COMMITS_JSON=$(cat "$COMMITS_FILE")
 
