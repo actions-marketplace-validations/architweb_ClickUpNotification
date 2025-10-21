@@ -123,7 +123,7 @@ done
 
 # Build changelog
 COMMIT_LIST_MD=""
-for k in "${!AUTHOR_LIST[@]}"; do
+for k in "${!AUTHOR_LIST[@]}"; do 
   AUTHOR="${AUTHOR_LIST[$k]}"
   COMMITS="${AUTHOR_COMMITS_LIST[$k]}"
   if [ -n "$COMMITS" ]; then
