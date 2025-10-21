@@ -41,7 +41,6 @@ jobs:
           clickup_project_name: "ClickUp Notification Package Test"
           title: "🧪 ClickUp Notification Testing Package Updates"
           description: "Testing performance optimizations and stats"
-          test_mode: "true"
           show_commit_statistics: "true"
           show_fetch_duration: "true"
           show_changelog_commits: "true"
