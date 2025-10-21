@@ -10,7 +10,7 @@ on:
       skip_test:
         description: "Skip test execution"
         required: false
-        default: "true"
+        default: "false"
         type: choice
         options:
           - "false"
