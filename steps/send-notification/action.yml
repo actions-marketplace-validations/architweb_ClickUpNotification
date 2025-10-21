@@ -38,14 +38,42 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Get User Information
-      id: user-info
+    - name: 👤📝 Get User Info & Resolve Names (Parallel)
+      id: parallel-info
       shell: bash
       run: |
         USER_INFO=$(mktemp)
-        chmod +x "$GITHUB_ACTION_PATH/scripts/get-user-info.sh"
-        "$GITHUB_ACTION_PATH/scripts/get-user-info.sh" "$USER_INFO"
+        NAMES_FILE=$(mktemp)
+
+        # Start user info fetch in background
+        (
+          chmod +x "$GITHUB_ACTION_PATH/scripts/get-user-info.sh"
+          "$GITHUB_ACTION_PATH/scripts/get-user-info.sh" "$USER_INFO"
+        ) &
+        USER_PID=$!
+
+        # Start name resolution in background (only if test mode)
+        if [[ "${{ inputs.test_mode }}" == "true" ]]; then
+          (
+            chmod +x "$GITHUB_ACTION_PATH/scripts/resolve-names.sh"
+            "$GITHUB_ACTION_PATH/scripts/resolve-names.sh" \
+              "${{ inputs.clickup_api_token }}" \
+              "${{ inputs.clickup_workspace_id }}" \
+              "$NAMES_FILE"
+          ) &
+          NAMES_PID=$!
+        fi
+
+        # Wait for user info to complete
+        wait $USER_PID
+
+        # Wait for names resolution if running
+        if [[ "${{ inputs.test_mode }}" == "true" ]]; then
+          wait $NAMES_PID
+        fi
+
         echo "USER_INFO=$USER_INFO" >> $GITHUB_OUTPUT
+        echo "NAMES_FILE=$NAMES_FILE" >> $GITHUB_OUTPUT
 
     - name: Build Message
       id: message
@@ -54,7 +82,7 @@ runs:
         MESSAGE_FILE=$(mktemp)
         chmod +x "$GITHUB_ACTION_PATH/scripts/build-message.sh"
         "$GITHUB_ACTION_PATH/scripts/build-message.sh" \
-          "${{ steps.user-info.outputs.USER_INFO }}" \
+          "${{ steps.parallel-info.outputs.USER_INFO }}" \
           "${{ inputs.title }}" \
           "${{ inputs.description }}" \
           "${{ inputs.formatted_duration }}" \
@@ -67,13 +95,8 @@ runs:
       if: ${{ inputs.test_mode == 'true' }}
       shell: bash
       run: |
-        NAMES_FILE=$(mktemp)
-        chmod +x "$GITHUB_ACTION_PATH/scripts/resolve-names.sh"
-        "$GITHUB_ACTION_PATH/scripts/resolve-names.sh" \
-          "${{ inputs.clickup_api_token }}" \
-          "${{ inputs.clickup_workspace_id }}" \
-          "$NAMES_FILE"
-        echo "NAMES_FILE=$NAMES_FILE" >> $GITHUB_OUTPUT
+        # Names already resolved in parallel step
+        echo "NAMES_FILE=${{ steps.parallel-info.outputs.NAMES_FILE }}" >> $GITHUB_OUTPUT
 
     - name: Preview Message
       if: ${{ inputs.test_mode == 'true' }}
