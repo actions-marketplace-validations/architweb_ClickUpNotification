@@ -6,10 +6,6 @@ inputs:
     description: "Use the full commit message instead of the first line"
     required: false
     default: "false"
-  sort_commits_alphabetically:
-    description: "Sort commits alphabetically by commit message (A-Z)"
-    required: false
-    default: "true"
   show_commit_statistics:
     description: "Show commit statistics in the notification"
     required: false
@@ -41,7 +37,6 @@ runs:
         "$GITHUB_ACTION_PATH/scripts/process-commits.sh" \
           "${{ steps.get-data.outputs.COMMITS_DATA }}" \
           "${{ inputs.full_commit_message }}" \
-          "${{ inputs.sort_commits_alphabetically }}" \
           "$COMMITS_OUTPUT"
         echo "COMMITS_OUTPUT=$COMMITS_OUTPUT" >> $GITHUB_OUTPUT
 

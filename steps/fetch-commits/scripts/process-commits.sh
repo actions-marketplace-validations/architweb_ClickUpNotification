@@ -5,8 +5,7 @@ set -e
 
 COMMITS_FILE="$1"
 FULL_COMMIT_MESSAGE="$2"
-SORT_ALPHABETICALLY="$3"
-OUTPUT_FILE="$4"
+OUTPUT_FILE="$3"
 
 # Constants
 CONVENTIONAL_COMMIT_TYPES="build|chore|docs|feat|fix|refactor|revert|style|test|release|security|deps|api"
@@ -31,7 +30,7 @@ format_conventional_commit() {
   else
     echo "$text"
   fi
-} 
+}
 
 COMMITS_JSON=$(cat "$COMMITS_FILE")
 
@@ -127,35 +126,7 @@ for k in "${!AUTHOR_LIST[@]}"; do
   AUTHOR="${AUTHOR_LIST[$k]}"
   COMMITS="${AUTHOR_COMMITS_LIST[$k]}"
   if [ -n "$COMMITS" ]; then
-    if [[ "$SORT_ALPHABETICALLY" == "true" ]]; then
-      # ONE ARRAY - each element is COMPLETE commit block (title + description)
-      declare -a COMMIT_ARRAY=()
-
-      # Read commits into array, each block is ONE element
-      while IFS= read -r -d '' block || [ -n "$block" ]; do
-        if [ -n "$block" ] && [[ "$block" =~ [^[:space:]] ]]; then
-          COMMIT_ARRAY+=("$block")
-        fi
-      done < <(echo "$COMMITS" | awk 'BEGIN{RS="\n\n"} NF{print $0 "\0"}')
-
-      # Sort array by first line (title) but keep complete blocks together
-      IFS=$'\n' SORTED=($(
-        for block in "${COMMIT_ARRAY[@]}"; do
-          title=$(echo "$block" | head -1 | sed 's/^\*[[:space:]]*//')
-          echo "${title}|SEPARATOR|${block}"
-        done | sort -t'|' -k1 | cut -d'|' -f3-
-      ))
-
-      # Rebuild from sorted array
-      SORTED_COMMITS=""
-      for commit in "${SORTED[@]}"; do
-        SORTED_COMMITS+="${commit}"$'\n\n'
-      done
-
-      COMMIT_LIST_MD+=$'\n'"_*$AUTHOR:*_\n$SORTED_COMMITS"
-    else
-      COMMIT_LIST_MD+=$'\n'"_*$AUTHOR:*_\n$COMMITS"
-    fi
+    COMMIT_LIST_MD+=$'\n'"_*$AUTHOR:*_\n$COMMITS"
   fi
 done
 

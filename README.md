@@ -22,7 +22,6 @@ It'll Send message to ClickUp chat, including:
 - **Changelog** since last run, grouped by author (configurable)
 - **Commits statistics** with deployment metrics (configurable)
 - Automatic ClickUp **task links** from (custom) task IDs in commit messages with **cross-platform compatibility**
-- **Alphabetical sorting** of commits (configurable)
 - **Single line** or **full commit** message mode
 - **Emphasizes Conventional** Commit types
 - **Smart name resolution** for workspaces and channels
@@ -55,20 +54,19 @@ Simply copy them from the link.
 
 The action requires the following inputs to connect to ClickUp and identify your project, make sure to add them as secrets to your GitHub repository:
 
-| Input                         | Description                                               | Type              | Required | Default |
-| ----------------------------- | --------------------------------------------------------- | ----------------- | -------- | ------- |
-| `clickup_api_token`           | Your ClickUp API token (Personal or Bot)                  | string            | Yes      | `none`  |
-| `clickup_workspace_id`        | The numerical ID of the ClickUp Workspace (Team)          | string            | Yes      | `none`  |
-| `clickup_channel_id`          | The ID of the ClickUp List or Chat View for notifications | string            | Yes      | `none`  |
-| `clickup_project_name`        | A descriptive name for your project (used in the message) | string            | Yes      | `none`  |
-| `title`                       | Custom title for the notification message                 | string            | No       | `""`    |
-| `description`                 | Custom description for the notification message           | string            | No       | `""`    |
-| `show_fetch_duration`         | Show duration information in the notification             | "true" \| "false" | No       | `true`  |
-| `show_changelog_commits`      | Show changelog commits in the notification                | "true" \| "false" | No       | `true`  |
-| `full_commit_message`         | Use full commit messages instead of first line only       | "true" \| "false" | No       | `true`  |
-| `sort_commits_alphabetically` | Sort commits alphabetically by commit message (A-Z)       | "true" \| "false" | No       | `true`  |
-| `show_commit_statistics`      | Show commit statistics table in the notification          | "true" \| "false" | No       | `false` |
-| `test_mode`                   | Preview mode - show message without sending to ClickUp    | "true" \| "false" | No       | `false` |
+| Input                    | Description                                               | Type              | Required | Default |
+| ------------------------ | --------------------------------------------------------- | ----------------- | -------- | ------- |
+| `clickup_api_token`      | Your ClickUp API token (Personal or Bot)                  | string            | Yes      | `none`  |
+| `clickup_workspace_id`   | The numerical ID of the ClickUp Workspace (Team)          | string            | Yes      | `none`  |
+| `clickup_channel_id`     | The ID of the ClickUp List or Chat View for notifications | string            | Yes      | `none`  |
+| `clickup_project_name`   | A descriptive name for your project (used in the message) | string            | Yes      | `none`  |
+| `title`                  | Custom title for the notification message                 | string            | No       | `""`    |
+| `description`            | Custom description for the notification message           | string            | No       | `""`    |
+| `show_fetch_duration`    | Show duration information in the notification             | "true" \| "false" | No       | `true`  |
+| `show_changelog_commits` | Show changelog commits in the notification                | "true" \| "false" | No       | `true`  |
+| `full_commit_message`    | Use full commit messages instead of first line only       | "true" \| "false" | No       | `true`  |
+| `show_commit_statistics` | Show commit statistics table in the notification          | "true" \| "false" | No       | `false` |
+| `test_mode`              | Preview mode - show message without sending to ClickUp    | "true" \| "false" | No       | `false` |
 
 ## Task ID Integration
 
@@ -142,7 +140,6 @@ Fine-tune how commits are displayed:
 - uses: architweb/ClickUpNotification@v3.0.0
   with:
     # ... other inputs ...
-    sort_commits_alphabetically: "true" # Sort commits A-Z
     full_commit_message: "true" # Use full commit messages
 ```
 

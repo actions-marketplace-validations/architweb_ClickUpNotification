@@ -45,4 +45,3 @@ jobs:
           show_fetch_duration: "true"
           show_changelog_commits: "true"
           full_commit_message: "true"
-          sort_commits_alphabetically: "false"

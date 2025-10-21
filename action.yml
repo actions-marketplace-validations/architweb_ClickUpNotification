@@ -38,10 +38,6 @@ inputs:
     description: "Use the full commit message instead of the first line"
     required: false
     default: "true"
-  sort_commits_alphabetically:
-    description: "Sort commits alphabetically by commit message (A-Z)"
-    required: false
-    default: "true"
   show_commit_statistics:
     description: "Show commit statistics in the notification"
     required: false
@@ -74,7 +70,6 @@ runs:
       uses: ./steps/fetch-commits
       with:
         full_commit_message: ${{ inputs.full_commit_message }}
-        sort_commits_alphabetically: ${{ inputs.sort_commits_alphabetically }}
         show_commit_statistics: ${{ inputs.show_commit_statistics }}
 
     - name: 📢 Send ClickUp Notification
