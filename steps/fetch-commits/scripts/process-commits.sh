@@ -67,14 +67,18 @@ for ((i=0; i<COMMIT_COUNT; i++)); do
 
     HEADER_LINE=$(format_conventional_commit "$HEADER_LINE" "true")
 
-    if echo "$BODY_LINES" | grep -qE '^\s*[\*\-\+]'; then
-      INDENTED_BODY=$(echo "$BODY_LINES" | sed -E 's/^\s*([\*\-\+])/    \1   /')
-    else
-      INDENTED_BODY=$(echo "$BODY_LINES" | sed 's/^/    /')
-    fi
+    # Consistent formatting: always use single space after bullet
+    FINAL_COMMIT_BLOCK="* ${HEADER_LINE}"
 
-    FINAL_COMMIT_BLOCK="*   ${HEADER_LINE}"
-    [ -n "$BODY_LINES" ] && FINAL_COMMIT_BLOCK="${FINAL_COMMIT_BLOCK}"$'\n'"${INDENTED_BODY}"
+    # Only add body if it exists and is not empty
+    if [ -n "$BODY_LINES" ] && [ "$BODY_LINES" != "" ]; then
+      if echo "$BODY_LINES" | grep -qE '^\s*[\*\-\+]'; then
+        INDENTED_BODY=$(echo "$BODY_LINES" | sed -E 's/^\s*([\*\-\+])/  \1 /')
+      else
+        INDENTED_BODY=$(echo "$BODY_LINES" | sed 's/^/  /')
+      fi
+      FINAL_COMMIT_BLOCK="${FINAL_COMMIT_BLOCK}"$'\n'"${INDENTED_BODY}"
+    fi
 
   else
     MESSAGE=$(echo "$COMMITS_JSON" | jq -r ".[$i].message" | sed -n '1p')
