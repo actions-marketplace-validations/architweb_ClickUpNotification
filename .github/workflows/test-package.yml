@@ -1,0 +1,49 @@
+name: Test Package
+
+on:
+  push:
+    branches:
+      - release/staging
+
+  workflow_dispatch:
+    inputs:
+      skip_test:
+        description: "Skip test execution"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.skip_test != 'true' }}
+
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: "release/staging"
+          fetch-depth: 0
+
+      - name: 🧪 Test ClickUp Notification
+        uses: ./
+        with:
+          clickup_api_token: pk_95531979_TWVEH6N22IV1Z66QZICZSQ4K0HXQWX8T
+          clickup_workspace_id: 9018515328
+          clickup_channel_id: 6-901803359374-8
+          clickup_project_name: "Package Test"
+          title: "🧪 Testing Package Updates"
+          description: "Testing performance optimizations and new stats"
+          test_mode: "true"
+          show_commit_statistics: "true"
+          show_fetch_duration: "true"
+          show_changelog_commits: "true"
+          full_commit_message: "true"
+          sort_commits_alphabetically: "true"
