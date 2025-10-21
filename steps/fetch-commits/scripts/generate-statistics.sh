@@ -28,16 +28,43 @@ if [ -n "$PREVIOUS_SHA" ] && [ "$PREVIOUS_SHA" != "$CURRENT_SHA" ]; then
     FILES_CHANGED=$(echo "$DIFF_STATS" | tail -1 | grep -oE '[0-9]+ files? changed' | grep -oE '[0-9]+' || echo "0")
     LINES_ADDED=$(echo "$DIFF_STATS" | tail -1 | grep -oE '[0-9]+ insertions?' | grep -oE '[0-9]+' || echo "0")
     LINES_REMOVED=$(echo "$DIFF_STATS" | tail -1 | grep -oE '[0-9]+ deletions?' | grep -oE '[0-9]+' || echo "0")
+    FILES_ADDED=$(git diff --name-status "$PREVIOUS_SHA...$CURRENT_SHA" 2>/dev/null | grep -c '^A' || echo "0")
+    FILES_REMOVED=$(git diff --name-status "$PREVIOUS_SHA...$CURRENT_SHA" 2>/dev/null | grep -c '^D' || echo "0")
   else
     FILES_CHANGED="0"
     LINES_ADDED="0"
     LINES_REMOVED="0"
+    FILES_ADDED="0"
+    FILES_REMOVED="0"
   fi
 else
   FILES_CHANGED="0"
   LINES_ADDED="0"
   LINES_REMOVED="0"
+  FILES_ADDED="0"
+  FILES_REMOVED="0"
 fi
+
+# Calculate commit type statistics
+REFACTOR_COMMITS=$(echo "$COMMITS_JSON" | jq -r '.[].message' | grep -iEc '^(refactor|refact)(\([^)]*\))?:' || echo "0")
+FIX_COMMITS=$(echo "$COMMITS_JSON" | jq -r '.[].message' | grep -iEc '^fix(\([^)]*\))?:' || echo "0")
+
+# Determine release type based on commit messages
+FEAT_COMMITS=$(echo "$COMMITS_JSON" | jq -r '.[].message' | grep -iEc '^feat(\([^)]*\))?:' || echo "0")
+BREAKING_COMMITS=$(echo "$COMMITS_JSON" | jq -r '.[].message' | grep -iEc '^[^:]+(\([^)]*\))?!:' || echo "0")
+
+if [ "$BREAKING_COMMITS" -gt 0 ]; then
+  RELEASE_TYPE="🚨 Major"
+elif [ "$FEAT_COMMITS" -gt 0 ]; then
+  RELEASE_TYPE="🎯 Minor"
+elif [ "$FIX_COMMITS" -gt 0 ]; then
+  RELEASE_TYPE="🔧 Patch"
+else
+  RELEASE_TYPE="📝 Other"
+fi
+
+# Find top contributor
+TOP_CONTRIBUTOR=$(echo "$COMMITS_JSON" | jq -r '.[].author' | sort | uniq -c | sort -nr | head -1 | sed 's/^[[:space:]]*[0-9]*[[:space:]]*//' || echo "Unknown")
 
 # Calculate time since last deployment
 if [ -n "$PREVIOUS_SHA" ]; then
@@ -48,33 +75,27 @@ if [ -n "$PREVIOUS_SHA" ]; then
     TIME_DIFF=$((CURRENT_COMMIT_DATE - PREVIOUS_COMMIT_DATE))
     DAYS=$((TIME_DIFF / 86400))
     HOURS=$(((TIME_DIFF % 86400) / 3600))
+    MINUTES=$(((TIME_DIFF % 3600) / 60))
 
-    if [ "$DAYS" -gt 0 ]; then
-      if [ "$HOURS" -gt 0 ]; then
-        TIME_SINCE="${DAYS} days, ${HOURS}h ago"
-      else
-        TIME_SINCE="${DAYS} days ago"
-      fi
-    elif [ "$HOURS" -gt 0 ]; then
-      TIME_SINCE="${HOURS}h ago"
-    else
-      MINUTES=$((TIME_DIFF / 60))
-      TIME_SINCE="${MINUTES}m ago"
-    fi
+    TIME_SINCE="${DAYS} day(s), ${HOURS} hour(s), ${MINUTES} minute(s)"
   else
-    TIME_SINCE="unknown"
+    TIME_SINCE="0 day(s), 0 hour(s), 0 minute(s)"
   fi
 else
   TIME_SINCE="first deployment"
 fi
 
-# Build statistics table
+# Build statistics table (sorted by type)
 STATS_TABLE="\n\n📊 **Stats:**\n"
 STATS_TABLE+="📝 **Count**: $TOTAL_COMMITS Commits\n"
+STATS_TABLE+="🎯 **Release Type**: $RELEASE_TYPE\n"
 STATS_TABLE+="📁 **Changed**: $FILES_CHANGED files\n"
-STATS_TABLE+="➕ **Added**: +$LINES_ADDED lines\n"
-STATS_TABLE+="➖ **Removed**: -$LINES_REMOVED lines\n"
+STATS_TABLE+="➕ **Added**: +$FILES_ADDED file(s), +$LINES_ADDED line(s)\n"
+STATS_TABLE+="➖ **Removed**: -$FILES_REMOVED file(s), -$LINES_REMOVED line(s)\n"
+STATS_TABLE+="🔧 **Fixes**: $FIX_COMMITS commits\n"
+STATS_TABLE+="🔄 **Refactor**: $REFACTOR_COMMITS commits\n"
 STATS_TABLE+="⏰ **Last Deploy**: $TIME_SINCE\n"
-STATS_TABLE+="👥 **Contributors**: $UNIQUE_AUTHORS "
+STATS_TABLE+="👥 **Contributors**: $UNIQUE_AUTHORS\n"
+STATS_TABLE+="🏆 **Top Contributor**: $TOP_CONTRIBUTOR"
 
 echo "$STATS_TABLE" > "$OUTPUT_FILE"
