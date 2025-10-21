@@ -7,15 +7,25 @@ COMMITS_FILE="$1"
 META_FILE="$2"
 OUTPUT_FILE="$3"
 
+# Early exit if no commits file or empty
+if [ ! -f "$COMMITS_FILE" ]; then
+  echo "" > "$OUTPUT_FILE"
+  exit 0
+fi
+
 COMMITS_JSON=$(cat "$COMMITS_FILE")
 
+# Early exit if no commits or no metadata
 if [ "$COMMITS_JSON" = "[]" ] || [ -z "$COMMITS_JSON" ] || [ ! -f "$META_FILE" ]; then
   echo "" > "$OUTPUT_FILE"
   exit 0
 fi
 
-# Read metadata
-source "$META_FILE"
+# Read metadata - exit early if missing required data
+if ! source "$META_FILE" 2>/dev/null; then
+  echo "" > "$OUTPUT_FILE"
+  exit 0
+fi
 
 # Calculate statistics
 TOTAL_COMMITS=$(echo "$COMMITS_JSON" | jq 'length')
