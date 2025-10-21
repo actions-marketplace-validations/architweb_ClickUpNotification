@@ -115,7 +115,7 @@ for ((i=0; i<COMMIT_COUNT; i++)); do
 
       if ! $FOUND; then
         AUTHOR_LIST+=("$AUTHOR")
-        AUTHOR_COMMITS_LIST+=("${FINAL_COMMIT_BLOCK}"$'\n\n')
+        AUTHOR_COMMITS_LIST+=("${FINAL_COMMIT_BLOCK}"$'\n\n') 
       fi
     fi
   fi
