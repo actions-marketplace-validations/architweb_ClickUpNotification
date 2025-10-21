@@ -115,7 +115,7 @@ for ((i=0; i<COMMIT_COUNT; i++)); do
 
       if ! $FOUND; then
         AUTHOR_LIST+=("$AUTHOR")
-        AUTHOR_COMMITS_LIST+=("${FINAL_COMMIT_BLOCK}"$'\n\n') 
+        AUTHOR_COMMITS_LIST+=("${FINAL_COMMIT_BLOCK}"$'\n\n')
       fi
     fi
   fi
@@ -128,28 +128,26 @@ for k in "${!AUTHOR_LIST[@]}"; do
   COMMITS="${AUTHOR_COMMITS_LIST[$k]}"
   if [ -n "$COMMITS" ]; then
     if [[ "$SORT_ALPHABETICALLY" == "true" ]]; then
-      # Simple bash array sort that preserves complete commit blocks
-      IFS=$'\n\n' read -d '' -r -a COMMIT_BLOCKS <<< "$COMMITS" || true
+      # Split commits into complete blocks and sort as complete units
+      mapfile -t COMMIT_BLOCKS < <(echo "$COMMITS" | awk 'BEGIN{RS="\n\n"; ORS="\n\n"} NF{print}')
 
-      # Create array of titles for sorting
-      TITLES=()
+      # Create associative array with title as key and complete block as value
+      declare -A SORTED_MAP
       for block in "${COMMIT_BLOCKS[@]}"; do
-        if [ -n "$block" ]; then
-          TITLE=$(echo "$block" | head -1)
-          TITLES+=("$TITLE")
+        if [ -n "$block" ] && [ "$block" != $'\n' ]; then
+          # Extract title (first line) for sorting key
+          TITLE=$(echo "$block" | head -1 | sed 's/^\*[[:space:]]*//')
+          SORTED_MAP["$TITLE"]="$block"
         fi
       done
 
-      # Sort titles and get their indices
-      SORTED_INDICES=($(for i in "${!TITLES[@]}"; do echo "$i ${TITLES[$i]}"; done | sort -k2 | cut -d' ' -f1))
-
-      # Rebuild commits in sorted order
+      # Sort titles and rebuild commits maintaining complete blocks
       SORTED_COMMITS=""
-      for idx in "${SORTED_INDICES[@]}"; do
-        if [ -n "${COMMIT_BLOCKS[$idx]}" ]; then
-          SORTED_COMMITS+="${COMMIT_BLOCKS[$idx]}"$'\n\n'
+      while IFS= read -r title; do
+        if [ -n "${SORTED_MAP[$title]}" ]; then
+          SORTED_COMMITS+="${SORTED_MAP[$title]}"$'\n\n'
         fi
-      done
+      done < <(printf '%s\n' "${!SORTED_MAP[@]}" | sort)
 
       COMMIT_LIST_MD+=$'\n'"_*$AUTHOR:*_\n$SORTED_COMMITS"
     else
