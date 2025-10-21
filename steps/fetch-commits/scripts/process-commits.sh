@@ -23,10 +23,21 @@ format_conventional_commit() {
   local text="$1"
   local is_header="$2"
 
-  if echo "$text" | grep -Eq "^(${CONVENTIONAL_COMMIT_TYPES})(\([^)]+\))?(!)?:"; then
-    local prefix=$(echo "$text" | grep -oE "^(${CONVENTIONAL_COMMIT_TYPES})(\([^)]+\))?(!)?:")
+  # Check if text matches conventional commit pattern (case-insensitive)
+  if echo "$text" | grep -Eiq "^(${CONVENTIONAL_COMMIT_TYPES})(\([^)]+\))?(!)?:"; then
+    # Extract the prefix (case-insensitive)
+    local prefix=$(echo "$text" | grep -oEi "^(${CONVENTIONAL_COMMIT_TYPES})(\([^)]+\))?(!)?:")
     local rest="${text#$prefix }"
-    echo "**${prefix}** ${rest}"
+
+    # Convert the commit type to lowercase, then capitalize first letter
+    local type=$(echo "$prefix" | grep -oEi "^(${CONVENTIONAL_COMMIT_TYPES})" | tr '[:upper:]' '[:lower:]')
+    type="$(tr '[:lower:]' '[:upper:]' <<< ${type:0:1})${type:1}"
+
+    # Rebuild prefix with capitalized type
+    local scope_and_breaking=$(echo "$prefix" | sed -E "s/^[^(:]*//" )
+    local normalized_prefix="${type}${scope_and_breaking}"
+
+    echo "**${normalized_prefix}** ${rest}"
   else
     echo "$text"
   fi
