@@ -33,23 +33,24 @@ UNIQUE_AUTHORS=$(echo "$COMMITS_JSON" | jq -r '.[].author' | sort -u | wc -l)
 
 # Get file and line statistics using single git diff call
 if [ -n "$PREVIOUS_SHA" ] && [ "$PREVIOUS_SHA" != "$CURRENT_SHA" ]; then
-  # Single git operation to get all stats at once
-  DIFF_OUTPUT=$(git diff --stat --name-status "$PREVIOUS_SHA...$CURRENT_SHA" 2>/dev/null || echo "")
+  # Get diff stats and name status separately for reliability
+  DIFF_STATS=$(git diff --stat "$PREVIOUS_SHA...$CURRENT_SHA" 2>/dev/null || echo "")
+  NAME_STATUS=$(git diff --name-status "$PREVIOUS_SHA...$CURRENT_SHA" 2>/dev/null || echo "")
 
-  if [ -n "$DIFF_OUTPUT" ]; then
-    # Extract stats from the combined output
-    DIFF_STATS=$(echo "$DIFF_OUTPUT" | tail -1)
-    NAME_STATUS=$(echo "$DIFF_OUTPUT" | head -n -1)
-
-    FILES_CHANGED=$(echo "$DIFF_STATS" | grep -oE '[0-9]+ files? changed' | grep -oE '[0-9]+' || echo "0")
-    LINES_ADDED=$(echo "$DIFF_STATS" | grep -oE '[0-9]+ insertions?' | grep -oE '[0-9]+' || echo "0")
-    LINES_REMOVED=$(echo "$DIFF_STATS" | grep -oE '[0-9]+ deletions?' | grep -oE '[0-9]+' || echo "0")
-    FILES_ADDED=$(echo "$NAME_STATUS" | grep -c '^A' || echo "0")
-    FILES_REMOVED=$(echo "$NAME_STATUS" | grep -c '^D' || echo "0")
+  if [ -n "$DIFF_STATS" ]; then
+    FILES_CHANGED=$(echo "$DIFF_STATS" | tail -1 | grep -oE '[0-9]+ files? changed' | grep -oE '[0-9]+' || echo "0")
+    LINES_ADDED=$(echo "$DIFF_STATS" | tail -1 | grep -oE '[0-9]+ insertions?' | grep -oE '[0-9]+' || echo "0")
+    LINES_REMOVED=$(echo "$DIFF_STATS" | tail -1 | grep -oE '[0-9]+ deletions?' | grep -oE '[0-9]+' || echo "0")
   else
     FILES_CHANGED="0"
     LINES_ADDED="0"
     LINES_REMOVED="0"
+  fi
+
+  if [ -n "$NAME_STATUS" ]; then
+    FILES_ADDED=$(echo "$NAME_STATUS" | grep -c '^A' || echo "0")
+    FILES_REMOVED=$(echo "$NAME_STATUS" | grep -c '^D' || echo "0")
+  else
     FILES_ADDED="0"
     FILES_REMOVED="0"
   fi
@@ -101,8 +102,8 @@ else
   TIME_SINCE="first deployment"
 fi
 
-# Build statistics table (sorted by type)
-STATS_TABLE="\n\n📊 **Stats:**\n"
+# Build statistics
+STATS_TABLE="\n\n\n📊 **Stats:**\n"
 STATS_TABLE+="📝 **Count**: ${TOTAL_COMMITS} Commit(s)\n"
 STATS_TABLE+="🎯 **Release Type**: ${RELEASE_TYPE}\n"
 STATS_TABLE+="📁 **Changed**: ${FILES_CHANGED} file(s)\n"
