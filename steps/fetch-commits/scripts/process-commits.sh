@@ -128,8 +128,28 @@ for k in "${!AUTHOR_LIST[@]}"; do
   COMMITS="${AUTHOR_COMMITS_LIST[$k]}"
   if [ -n "$COMMITS" ]; then
     if [[ "$SORT_ALPHABETICALLY" == "true" ]]; then
-      # Sort by commit title only (first line), not entire block
-      SORTED_COMMITS=$(echo "$COMMITS" | sort -t$'\n' -k1,1)
+      # Custom sort that preserves multi-line commit blocks
+      TEMP_FILE=$(mktemp)
+      echo "$COMMITS" > "$TEMP_FILE"
+
+      # Split commits by double newlines, sort by first line, then rejoin
+      awk 'BEGIN{RS="\n\n"; ORS="\n\n"} {commits[NR] = $0; titles[NR] = $1} END{
+        n = asort(titles, sorted_titles)
+        for(i=1; i<=n; i++) {
+          for(j=1; j<=NR; j++) {
+            if(titles[j] == sorted_titles[i]) {
+              print commits[j]
+              delete commits[j]
+              delete titles[j]
+              break
+            }
+          }
+        }
+      }' "$TEMP_FILE" | sed '$s/\n\n$/\n/' > "${TEMP_FILE}.sorted"
+
+      SORTED_COMMITS=$(cat "${TEMP_FILE}.sorted")
+      rm -f "$TEMP_FILE" "${TEMP_FILE}.sorted"
+
       COMMIT_LIST_MD+=$'\n'"_*$AUTHOR:*_\n$SORTED_COMMITS"
     else
       COMMIT_LIST_MD+=$'\n'"_*$AUTHOR:*_\n$COMMITS"
