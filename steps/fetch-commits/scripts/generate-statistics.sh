@@ -77,7 +77,7 @@ elif [ "$FEAT_COMMITS" -gt 0 ]; then
 elif [ "$FIX_COMMITS" -gt 0 ]; then
   RELEASE_TYPE="🔧 Patch"
 else
-  RELEASE_TYPE="📝 Other"
+  RELEASE_TYPE=""  # Hide "Other" type
 fi
 
 # Find top contributor
@@ -94,18 +94,27 @@ if [ -n "$PREVIOUS_SHA" ]; then
     HOURS=$(((TIME_DIFF % 86400) / 3600))
     MINUTES=$(((TIME_DIFF % 3600) / 60))
 
-    TIME_SINCE="${DAYS} day(s), ${HOURS} hour(s), ${MINUTES} minute(s)"
+    # Hide if less than 30 minutes
+    if [ "$TIME_DIFF" -ge 1800 ]; then
+      TIME_SINCE="${DAYS} day(s), ${HOURS} hour(s), ${MINUTES} minute(s)"
+    else
+      TIME_SINCE=""
+    fi
   else
-    TIME_SINCE="0 day(s), 0 hour(s), 0 minute(s)"
+    TIME_SINCE=""
   fi
 else
-  TIME_SINCE="first deployment"
+  TIME_SINCE=""
 fi
 
 # Build statistics
 STATS_TABLE="\n\n\n📊 **Stats:**\n"
 STATS_TABLE+="📝 **Count**: ${TOTAL_COMMITS} Commit(s)\n"
-STATS_TABLE+="🎯 **Release Type**: ${RELEASE_TYPE}\n"
+
+# Only show release type if it's not "Other"
+if [ -n "$RELEASE_TYPE" ]; then
+  STATS_TABLE+="🎯 **Release Type**: ${RELEASE_TYPE}\n"
+fi
 
 # Only show if files were changed
 if [ "$FILES_CHANGED" -gt 0 ]; then
@@ -154,8 +163,22 @@ if [ "$REFACTOR_COMMITS" -gt 0 ]; then
   STATS_TABLE+="🔄 **Refactor**: ${REFACTOR_COMMITS} commit(s)\n"
 fi
 
-STATS_TABLE+="⏰ **Last Deploy**: ${TIME_SINCE}\n"
-STATS_TABLE+="👥 **Contributor(s)**: ${UNIQUE_AUTHORS}\n"
-STATS_TABLE+="🏆 **Top Contributor**: ${TOP_CONTRIBUTOR}"
+# Only show if time diff is >= 30 minutes
+if [ -n "$TIME_SINCE" ]; then
+  STATS_TABLE+="⏰ **Last Deploy**: ${TIME_SINCE}\n"
+fi
+
+# Only show contributors if 2 or more
+if [ "$UNIQUE_AUTHORS" -ge 2 ]; then
+  STATS_TABLE+="👥 **Contributor(s)**: ${UNIQUE_AUTHORS}\n"
+fi
+
+# Only show top contributor if 3 or more contributors
+if [ "$UNIQUE_AUTHORS" -ge 3 ]; then
+  STATS_TABLE+="🏆 **Top Contributor**: ${TOP_CONTRIBUTOR}"
+else
+  # Remove trailing newline if top contributor is not shown
+  STATS_TABLE="${STATS_TABLE%\\n}"
+fi
 
 echo -e "$STATS_TABLE" > "$OUTPUT_FILE"
