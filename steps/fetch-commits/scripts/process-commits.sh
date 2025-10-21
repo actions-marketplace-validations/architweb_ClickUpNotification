@@ -128,7 +128,8 @@ for k in "${!AUTHOR_LIST[@]}"; do
   COMMITS="${AUTHOR_COMMITS_LIST[$k]}"
   if [ -n "$COMMITS" ]; then
     if [[ "$SORT_ALPHABETICALLY" == "true" ]]; then
-      SORTED_COMMITS=$(echo "$COMMITS" | sort)
+      # Sort by commit title only (first line), not entire block
+      SORTED_COMMITS=$(echo "$COMMITS" | sort -t$'\n' -k1,1)
       COMMIT_LIST_MD+=$'\n'"_*$AUTHOR:*_\n$SORTED_COMMITS"
     else
       COMMIT_LIST_MD+=$'\n'"_*$AUTHOR:*_\n$COMMITS"
