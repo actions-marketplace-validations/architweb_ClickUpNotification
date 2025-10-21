@@ -9,7 +9,7 @@ SORT_ALPHABETICALLY="$3"
 OUTPUT_FILE="$4"
 
 # Constants
-CONVENTIONAL_COMMIT_TYPES="build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test"
+CONVENTIONAL_COMMIT_TYPES="build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test|release|security|deps|config|hotfix|ui|api"
 
 # Helper function to format task links
 format_task_links() {
@@ -25,13 +25,9 @@ format_conventional_commit() {
   local is_header="$2"
 
   if echo "$text" | grep -Eq "^(${CONVENTIONAL_COMMIT_TYPES})(\([^)]+\))?(!)?:"; then
-    if [[ "$is_header" == "true" ]]; then
-      echo "**${text}**"
-    else
-      local prefix=$(echo "$text" | grep -oE "^(${CONVENTIONAL_COMMIT_TYPES})(\([^)]+\))?(!)?:")
-      local rest="${text#$prefix }"
-      echo "**${prefix}** ${rest}"
-    fi
+    local prefix=$(echo "$text" | grep -oE "^(${CONVENTIONAL_COMMIT_TYPES})(\([^)]+\))?(!)?:")
+    local rest="${text#$prefix }"
+    echo "**${prefix}** ${rest}"
   else
     echo "$text"
   fi
