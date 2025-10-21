@@ -44,8 +44,6 @@ if [ -n "$PREVIOUS_SHA" ] && [ "$PREVIOUS_SHA" != "$CURRENT_SHA" ]; then
     FILES_CHANGED=$(echo "$DIFF_STATS" | grep -oE '[0-9]+ files? changed' | grep -oE '[0-9]+' || echo "0")
     LINES_ADDED=$(echo "$DIFF_STATS" | grep -oE '[0-9]+ insertions?' | grep -oE '[0-9]+' || echo "0")
     LINES_REMOVED=$(echo "$DIFF_STATS" | grep -oE '[0-9]+ deletions?' | grep -oE '[0-9]+' || echo "0")
-
-    # Count added and removed files from name-status
     FILES_ADDED=$(echo "$NAME_STATUS" | grep -c '^A' || echo "0")
     FILES_REMOVED=$(echo "$NAME_STATUS" | grep -c '^D' || echo "0")
   else
@@ -105,15 +103,15 @@ fi
 
 # Build statistics table (sorted by type)
 STATS_TABLE="\n\n📊 **Stats:**\n"
-STATS_TABLE+="📝 **Count**: $TOTAL_COMMITS Commits\n"
-STATS_TABLE+="🎯 **Release Type**: $RELEASE_TYPE\n"
-STATS_TABLE+="📁 **Changed**: $FILES_CHANGED files\n"
-STATS_TABLE+="➕ **Added**: +$FILES_ADDED file(s), +$LINES_ADDED line(s)\n"
-STATS_TABLE+="➖ **Removed**: -$FILES_REMOVED file(s), -$LINES_REMOVED line(s)\n"
-STATS_TABLE+="🔧 **Fixes**: $FIX_COMMITS commits\n"
-STATS_TABLE+="🔄 **Refactor**: $REFACTOR_COMMITS commits\n"
-STATS_TABLE+="⏰ **Last Deploy**: $TIME_SINCE\n"
-STATS_TABLE+="👥 **Contributors**: $UNIQUE_AUTHORS\n"
-STATS_TABLE+="🏆 **Top Contributor**: $TOP_CONTRIBUTOR"
+STATS_TABLE+="📝 **Count**: ${TOTAL_COMMITS} Commit(s)\n"
+STATS_TABLE+="🎯 **Release Type**: ${RELEASE_TYPE}\n"
+STATS_TABLE+="📁 **Changed**: ${FILES_CHANGED} file(s)\n"
+STATS_TABLE+="➕ **Added**: +${FILES_ADDED} file(s), +${LINES_ADDED} line(s)\n"
+STATS_TABLE+="➖ **Removed**: -${FILES_REMOVED} file(s), -${LINES_REMOVED} line(s)\n"
+STATS_TABLE+="🔧 **Fix(es)**: ${FIX_COMMITS} commit(s)\n"
+STATS_TABLE+="🔄 **Refactor(s)**: ${REFACTOR_COMMITS} commit(s)\n"
+STATS_TABLE+="⏰ **Last Deploy**: ${TIME_SINCE}\n"
+STATS_TABLE+="👥 **Contributor(s)**: ${UNIQUE_AUTHORS}\n"
+STATS_TABLE+="🏆 **Top Contributor**: ${TOP_CONTRIBUTOR}"
 
-echo "$STATS_TABLE" > "$OUTPUT_FILE"
+echo -e "$STATS_TABLE" > "$OUTPUT_FILE"
