@@ -1,5 +1,60 @@
 # Changelog
 
+## [v3.1.0] - 2025-10-22
+
+### 🎯 Enhanced Features
+
+- **🔤 Case-Insensitive Conventional Commits**: Conventional commit types now accept any case (lowercase, UPPERCASE, Capitalize) and automatically normalize to capitalized format
+  - `feat`, `FEAT`, `Feat` all become `**Feat:**`
+  - `fix`, `FIX`, `Fix` all become `**Fix:**`
+  - Works with all conventional commit types: build, chore, docs, feat, fix, refactor, revert, style, test, release, security, deps, api
+
+### 🧹 Improvements
+
+- **📊 Smarter Statistics Display**: Enhanced conditional visibility for cleaner stats
+  - Hide "Release Type" when it's "Other" (non-conventional commits)
+  - Hide "Last Deploy" if time difference is less than 30 minutes
+  - Hide "Contributor(s)" count if less than 2 contributors
+  - Hide "Top Contributor" if less than 3 contributors
+  - Only show relevant metrics to reduce noise
+
+### 🗑️ Removed Features
+
+- **❌ Removed Alphabetical Sorting**: Eliminated `sort_commits_alphabetically` feature
+  - Commits now display in chronological order (as committed)
+  - Removed complex sorting logic that caused commit title/description separation issues
+  - Simplified codebase by removing problematic sorting functionality
+  - Breaking change: `sort_commits_alphabetically` input parameter no longer available
+
+### 🐛 Bug Fixes
+
+- **✅ Fixed Commit Block Integrity**: Resolved issue where multi-line commits were being separated during processing
+- **🔧 Cleaner Code**: Removed unused sorting logic and simplified commit processing pipeline
+
+### ⚠️ Breaking Changes
+
+- Removed `sort_commits_alphabetically` input parameter from action and all sub-actions
+- Commits will always appear in chronological order
+
+### 📝 Migration Guide
+
+If you were using `sort_commits_alphabetically: "true"`:
+
+```yaml
+# Before (v3.0.0)
+- uses: architweb/ClickUpNotification@v3.0.0
+  with:
+    sort_commits_alphabetically: "true" # ❌ No longer available
+
+# After (v3.1.0)
+- uses: architweb/ClickUpNotification@v3.1.0
+  with:
+    # ✅ Remove sort_commits_alphabetically parameter
+    # Commits will display chronologically
+```
+
+---
+
 ## [v3.0.0] - 2025-06-19
 
 ### 🚀 Major Features
