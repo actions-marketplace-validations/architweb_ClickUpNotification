@@ -118,7 +118,7 @@ for ((i=0; i<COMMIT_COUNT; i++)); do
         AUTHOR_COMMITS_LIST+=("${FINAL_COMMIT_BLOCK}"$'\n\n')
       fi
     fi
-  fi
+  fi 
 done
 
 # Build changelog
