@@ -84,20 +84,21 @@ for ((i=0; i<COMMIT_COUNT; i++)); do
     FINAL_COMMIT_BLOCK="* ${MESSAGE}"
   fi
 
-  KEY="${AUTHOR}::${FINAL_COMMIT_BLOCK}"
+  # Use only the commit message for uniqueness, not author+message
+  COMMIT_SIGNATURE=$(echo "$FINAL_COMMIT_BLOCK" | sed 's/^\*[[:space:]]*//')
 
   # Skip merge commits
   if [[ ! "$FINAL_COMMIT_BLOCK" =~ ^\*[[:space:]]+[Mm]erge[[:space:]]+branch ]]; then
     IS_UNIQUE=true
     for existing_key in "${UNIQUE_KEYS[@]}"; do
-      if [[ "$existing_key" == "$KEY" ]]; then
+      if [[ "$existing_key" == "$COMMIT_SIGNATURE" ]]; then
         IS_UNIQUE=false
         break
       fi
     done
 
     if $IS_UNIQUE; then
-      UNIQUE_KEYS+=("$KEY")
+      UNIQUE_KEYS+=("$COMMIT_SIGNATURE")
 
       FOUND=false
       for j in "${!AUTHOR_LIST[@]}"; do
