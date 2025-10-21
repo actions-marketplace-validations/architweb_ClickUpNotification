@@ -62,7 +62,7 @@ for ((i=0; i<COMMIT_COUNT; i++)); do
     RAW_MESSAGE=$(echo "$COMMITS_JSON" | jq -r ".[$i].message")
     FORMATTED_MESSAGE=$(format_task_links "$RAW_MESSAGE")
 
-    HEADER_LINE=$(echo "$FORMATTED_MESSAGE" | sed -n '1p') 
+    HEADER_LINE=$(echo "$FORMATTED_MESSAGE" | sed -n '1p')
     BODY_LINES=$(echo "$FORMATTED_MESSAGE" | sed '1d')
 
     HEADER_LINE=$(format_conventional_commit "$HEADER_LINE" "true")
@@ -128,26 +128,29 @@ for k in "${!AUTHOR_LIST[@]}"; do
   COMMITS="${AUTHOR_COMMITS_LIST[$k]}"
   if [ -n "$COMMITS" ]; then
     if [[ "$SORT_ALPHABETICALLY" == "true" ]]; then
-      # Split commits into complete blocks and sort as complete units
-      mapfile -t COMMIT_BLOCKS < <(echo "$COMMITS" | awk 'BEGIN{RS="\n\n"; ORS="\n\n"} NF{print}')
+      # ONE ARRAY - each element is COMPLETE commit block (title + description)
+      declare -a COMMIT_ARRAY=()
 
-      # Create associative array with title as key and complete block as value
-      declare -A SORTED_MAP
-      for block in "${COMMIT_BLOCKS[@]}"; do
-        if [ -n "$block" ] && [ "$block" != $'\n' ]; then
-          # Extract title (first line) for sorting key
-          TITLE=$(echo "$block" | head -1 | sed 's/^\*[[:space:]]*//')
-          SORTED_MAP["$TITLE"]="$block"
+      # Read commits into array, each block is ONE element
+      while IFS= read -r -d '' block || [ -n "$block" ]; do
+        if [ -n "$block" ] && [[ "$block" =~ [^[:space:]] ]]; then
+          COMMIT_ARRAY+=("$block")
         fi
-      done
+      done < <(echo "$COMMITS" | awk 'BEGIN{RS="\n\n"} NF{print $0 "\0"}')
 
-      # Sort titles and rebuild commits maintaining complete blocks
+      # Sort array by first line (title) but keep complete blocks together
+      IFS=$'\n' SORTED=($(
+        for block in "${COMMIT_ARRAY[@]}"; do
+          title=$(echo "$block" | head -1 | sed 's/^\*[[:space:]]*//')
+          echo "${title}|SEPARATOR|${block}"
+        done | sort -t'|' -k1 | cut -d'|' -f3-
+      ))
+
+      # Rebuild from sorted array
       SORTED_COMMITS=""
-      while IFS= read -r title; do
-        if [ -n "${SORTED_MAP[$title]}" ]; then
-          SORTED_COMMITS+="${SORTED_MAP[$title]}"$'\n\n'
-        fi
-      done < <(printf '%s\n' "${!SORTED_MAP[@]}" | sort)
+      for commit in "${SORTED[@]}"; do
+        SORTED_COMMITS+="${commit}"$'\n\n'
+      done
 
       COMMIT_LIST_MD+=$'\n'"_*$AUTHOR:*_\n$SORTED_COMMITS"
     else
