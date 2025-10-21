@@ -106,11 +106,54 @@ fi
 STATS_TABLE="\n\n\n📊 **Stats:**\n"
 STATS_TABLE+="📝 **Count**: ${TOTAL_COMMITS} Commit(s)\n"
 STATS_TABLE+="🎯 **Release Type**: ${RELEASE_TYPE}\n"
-STATS_TABLE+="📁 **Changed**: ${FILES_CHANGED} file(s)\n"
-STATS_TABLE+="➕ **Added**: +${FILES_ADDED} file(s), +${LINES_ADDED} line(s)\n"
-STATS_TABLE+="➖ **Removed**: -${FILES_REMOVED} file(s), -${LINES_REMOVED} line(s)\n"
-STATS_TABLE+="🔧 **Fix(es)**: ${FIX_COMMITS} commit(s)\n"
-STATS_TABLE+="🔄 **Refactor(s)**: ${REFACTOR_COMMITS} commit(s)\n"
+
+# Only show if files were changed
+if [ "$FILES_CHANGED" -gt 0 ]; then
+  STATS_TABLE+="📁 **Changed**: ${FILES_CHANGED} file(s)\n"
+fi
+
+# Build Added line dynamically
+if [ "$FILES_ADDED" -gt 0 ] || [ "$LINES_ADDED" -gt 0 ]; then
+  ADDED_PARTS=""
+  if [ "$FILES_ADDED" -gt 0 ]; then
+    ADDED_PARTS="+${FILES_ADDED} file(s)"
+  fi
+  if [ "$LINES_ADDED" -gt 0 ]; then
+    if [ -n "$ADDED_PARTS" ]; then
+      ADDED_PARTS="${ADDED_PARTS}, +${LINES_ADDED} line(s)"
+    else
+      ADDED_PARTS="+${LINES_ADDED} line(s)"
+    fi
+  fi
+  STATS_TABLE+="➕ **Added**: ${ADDED_PARTS}\n"
+fi
+
+# Build Removed line dynamically
+if [ "$FILES_REMOVED" -gt 0 ] || [ "$LINES_REMOVED" -gt 0 ]; then
+  REMOVED_PARTS=""
+  if [ "$FILES_REMOVED" -gt 0 ]; then
+    REMOVED_PARTS="-${FILES_REMOVED} file(s)"
+  fi
+  if [ "$LINES_REMOVED" -gt 0 ]; then
+    if [ -n "$REMOVED_PARTS" ]; then
+      REMOVED_PARTS="${REMOVED_PARTS}, -${LINES_REMOVED} line(s)"
+    else
+      REMOVED_PARTS="-${LINES_REMOVED} line(s)"
+    fi
+  fi
+  STATS_TABLE+="➖ **Removed**: ${REMOVED_PARTS}\n"
+fi
+
+# Only show if fixes exist
+if [ "$FIX_COMMITS" -gt 0 ]; then
+  STATS_TABLE+="🔧 **Fixes**: ${FIX_COMMITS} commit(s)\n"
+fi
+
+# Only show if refactors exist
+if [ "$REFACTOR_COMMITS" -gt 0 ]; then
+  STATS_TABLE+="🔄 **Refactor**: ${REFACTOR_COMMITS} commit(s)\n"
+fi
+
 STATS_TABLE+="⏰ **Last Deploy**: ${TIME_SINCE}\n"
 STATS_TABLE+="👥 **Contributor(s)**: ${UNIQUE_AUTHORS}\n"
 STATS_TABLE+="🏆 **Top Contributor**: ${TOP_CONTRIBUTOR}"
