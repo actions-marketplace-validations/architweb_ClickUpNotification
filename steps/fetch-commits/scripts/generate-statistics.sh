@@ -31,15 +31,23 @@ fi
 TOTAL_COMMITS=$(echo "$COMMITS_JSON" | jq 'length')
 UNIQUE_AUTHORS=$(echo "$COMMITS_JSON" | jq -r '.[].author' | sort -u | wc -l)
 
-# Get file and line statistics using git diff
+# Get file and line statistics using single git diff call
 if [ -n "$PREVIOUS_SHA" ] && [ "$PREVIOUS_SHA" != "$CURRENT_SHA" ]; then
-  DIFF_STATS=$(git diff --stat "$PREVIOUS_SHA...$CURRENT_SHA" 2>/dev/null || echo "")
-  if [ -n "$DIFF_STATS" ]; then
-    FILES_CHANGED=$(echo "$DIFF_STATS" | tail -1 | grep -oE '[0-9]+ files? changed' | grep -oE '[0-9]+' || echo "0")
-    LINES_ADDED=$(echo "$DIFF_STATS" | tail -1 | grep -oE '[0-9]+ insertions?' | grep -oE '[0-9]+' || echo "0")
-    LINES_REMOVED=$(echo "$DIFF_STATS" | tail -1 | grep -oE '[0-9]+ deletions?' | grep -oE '[0-9]+' || echo "0")
-    FILES_ADDED=$(git diff --name-status "$PREVIOUS_SHA...$CURRENT_SHA" 2>/dev/null | grep -c '^A' || echo "0")
-    FILES_REMOVED=$(git diff --name-status "$PREVIOUS_SHA...$CURRENT_SHA" 2>/dev/null | grep -c '^D' || echo "0")
+  # Single git operation to get all stats at once
+  DIFF_OUTPUT=$(git diff --stat --name-status "$PREVIOUS_SHA...$CURRENT_SHA" 2>/dev/null || echo "")
+
+  if [ -n "$DIFF_OUTPUT" ]; then
+    # Extract stats from the combined output
+    DIFF_STATS=$(echo "$DIFF_OUTPUT" | tail -1)
+    NAME_STATUS=$(echo "$DIFF_OUTPUT" | head -n -1)
+
+    FILES_CHANGED=$(echo "$DIFF_STATS" | grep -oE '[0-9]+ files? changed' | grep -oE '[0-9]+' || echo "0")
+    LINES_ADDED=$(echo "$DIFF_STATS" | grep -oE '[0-9]+ insertions?' | grep -oE '[0-9]+' || echo "0")
+    LINES_REMOVED=$(echo "$DIFF_STATS" | grep -oE '[0-9]+ deletions?' | grep -oE '[0-9]+' || echo "0")
+
+    # Count added and removed files from name-status
+    FILES_ADDED=$(echo "$NAME_STATUS" | grep -c '^A' || echo "0")
+    FILES_REMOVED=$(echo "$NAME_STATUS" | grep -c '^D' || echo "0")
   else
     FILES_CHANGED="0"
     LINES_ADDED="0"
