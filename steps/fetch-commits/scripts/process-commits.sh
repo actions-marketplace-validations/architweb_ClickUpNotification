@@ -77,7 +77,7 @@ for ((i=0; i<COMMIT_COUNT; i++)); do
       else
         INDENTED_BODY=$(echo "$BODY_LINES" | sed 's/^/  /')
       fi
-      FINAL_COMMIT_BLOCK="${FINAL_COMMIT_BLOCK}"$'\n'"${INDENTED_BODY}"
+      FINAL_COMMIT_BLOCK="${FINAL_COMMIT_BLOCK}"$'\n\n'"${INDENTED_BODY}"
     fi
 
   else
@@ -107,7 +107,7 @@ for ((i=0; i<COMMIT_COUNT; i++)); do
       FOUND=false
       for j in "${!AUTHOR_LIST[@]}"; do
         if [[ "${AUTHOR_LIST[$j]}" == "$AUTHOR" ]]; then
-          AUTHOR_COMMITS_LIST[$j]+="${FINAL_COMMIT_BLOCK}"$'\n'
+          AUTHOR_COMMITS_LIST[$j]+="${FINAL_COMMIT_BLOCK}"$'\n\n'
           FOUND=true
           break
         fi
@@ -115,7 +115,7 @@ for ((i=0; i<COMMIT_COUNT; i++)); do
 
       if ! $FOUND; then
         AUTHOR_LIST+=("$AUTHOR")
-        AUTHOR_COMMITS_LIST+=("${FINAL_COMMIT_BLOCK}"$'\n')
+        AUTHOR_COMMITS_LIST+=("${FINAL_COMMIT_BLOCK}"$'\n\n')
       fi
     fi
   fi
