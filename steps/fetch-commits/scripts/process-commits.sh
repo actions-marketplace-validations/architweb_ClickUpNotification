@@ -128,27 +128,28 @@ for k in "${!AUTHOR_LIST[@]}"; do
   COMMITS="${AUTHOR_COMMITS_LIST[$k]}"
   if [ -n "$COMMITS" ]; then
     if [[ "$SORT_ALPHABETICALLY" == "true" ]]; then
-      # Custom sort that preserves multi-line commit blocks
-      TEMP_FILE=$(mktemp)
-      echo "$COMMITS" > "$TEMP_FILE"
+      # Simple bash array sort that preserves complete commit blocks
+      IFS=$'\n\n' read -d '' -r -a COMMIT_BLOCKS <<< "$COMMITS" || true
 
-      # Split commits by double newlines, sort by first line, then rejoin
-      awk 'BEGIN{RS="\n\n"; ORS="\n\n"} {commits[NR] = $0; titles[NR] = $1} END{
-        n = asort(titles, sorted_titles)
-        for(i=1; i<=n; i++) {
-          for(j=1; j<=NR; j++) {
-            if(titles[j] == sorted_titles[i]) {
-              print commits[j]
-              delete commits[j]
-              delete titles[j]
-              break
-            }
-          }
-        }
-      }' "$TEMP_FILE" | sed '$s/\n\n$/\n/' > "${TEMP_FILE}.sorted"
+      # Create array of titles for sorting
+      TITLES=()
+      for block in "${COMMIT_BLOCKS[@]}"; do
+        if [ -n "$block" ]; then
+          TITLE=$(echo "$block" | head -1)
+          TITLES+=("$TITLE")
+        fi
+      done
 
-      SORTED_COMMITS=$(cat "${TEMP_FILE}.sorted")
-      rm -f "$TEMP_FILE" "${TEMP_FILE}.sorted"
+      # Sort titles and get their indices
+      SORTED_INDICES=($(for i in "${!TITLES[@]}"; do echo "$i ${TITLES[$i]}"; done | sort -k2 | cut -d' ' -f1))
+
+      # Rebuild commits in sorted order
+      SORTED_COMMITS=""
+      for idx in "${SORTED_INDICES[@]}"; do
+        if [ -n "${COMMIT_BLOCKS[$idx]}" ]; then
+          SORTED_COMMITS+="${COMMIT_BLOCKS[$idx]}"$'\n\n'
+        fi
+      done
 
       COMMIT_LIST_MD+=$'\n'"_*$AUTHOR:*_\n$SORTED_COMMITS"
     else
