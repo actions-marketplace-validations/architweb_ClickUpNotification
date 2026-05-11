@@ -83,6 +83,15 @@ fi
 # Find top contributor
 TOP_CONTRIBUTOR=$(echo "$COMMITS_JSON" | jq -r '.[].author' | sort | uniq -c | sort -nr | head -1 | sed 's/^[[:space:]]*[0-9]*[[:space:]]*//' || echo "Unknown")
 
+# Capitalize top contributor name (Title Case)
+TOP_CONTRIBUTOR=$(echo "$TOP_CONTRIBUTOR" | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2))}1')
+
+# Handle copilot agent bot display name
+TOP_CONTRIBUTOR_LOWER=$(echo "$TOP_CONTRIBUTOR" | tr '[:upper:]' '[:lower:]')
+if [[ "$TOP_CONTRIBUTOR_LOWER" == *"copilot"*"agent"*"bot"* ]] || [[ "$TOP_CONTRIBUTOR_LOWER" == *"copilot-swe-agent"* ]]; then
+  TOP_CONTRIBUTOR="Copilot Agent"
+fi
+
 # Calculate time since last deployment
 if [ -n "$PREVIOUS_SHA" ]; then
   PREVIOUS_COMMIT_DATE=$(git show -s --format=%ct "$PREVIOUS_SHA" 2>/dev/null || echo "")

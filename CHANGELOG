@@ -1,5 +1,63 @@
 # Changelog
 
+## [v3.2.0] - 2026-05-11
+
+### 🎯 New Features
+
+- **🤖 Agent Commit Filtering** (`filter_agent_commits`): Automatically filters out agent-generated commits (e.g., "Initial plan", "Agent-Logs-Url:", "Co-authored-by:") from the changelog for cleaner notifications
+  - Enabled by default — set to `"false"` to show all commits
+  - Also strips `Co-authored-by:` trailer lines from commit message bodies
+
+- **🔤 Capitalized Contributor Names**: All contributor names are now displayed in Title Case for consistent formatting
+  - `copilot swe agent bot` → `Copilot Swe Agent Bot`
+  - `contributor name` → `Contributor Name`
+
+- **🤝 Copilot Agent Attribution**: When the commit author is "copilot swe agent bot", the action extracts the co-authored contributor name and displays it as `"Real Name (Copilot Agent)"` instead of the bot name
+  - Example: `ContributorName (Copilot Agent)` instead of `Copilot Swe Agent Bot`
+
+- **🎨 Environment-Specific Emojis** (`staging_emoji`, `production_emoji`): Customize the notification emoji per environment
+  - Staging branches default to 🧪, production branches default to 🚀
+  - Auto-detected based on branch name containing "staging"
+
+- **📂 Group Commits by Type** (`group_commits_by_type`): Group changelog entries by conventional commit type (Features, Fixes, Refactors, etc.) instead of by author
+  - Disabled by default — set to `"true"` to enable
+  - Automatically maps commit types to labeled categories with emojis
+  - Strips redundant type prefix from commit messages under type headers
+
+- **🔗 PR Link Association** (`show_pr_links`): Automatically linkifies `#123` PR/issue references in commit messages to GitHub pull request URLs
+  - Disabled by default — set to `"true"` to enable
+
+- **❌ Failure Notifications** (`notify_on_failure`, `workflow_status`): Send a notification when the workflow fails, including the triggering user, project name, branch, and a direct link to the workflow run
+  - Disabled by default — set `notify_on_failure: "true"` and pass `workflow_status: ${{ job.status }}`
+  - Use `if: always()` on the action step to ensure it runs on failure
+
+### 🧹 Improvements
+
+- **📊 Capitalized Statistics Names**: Top contributor name in statistics is now Title Cased and Copilot agent bot names are displayed as "Copilot Agent"
+
+### 📝 Migration Guide
+
+All new features are backwards compatible. Existing workflows will continue to work without changes.
+
+To adopt new features:
+
+```yaml
+# v3.2.0 with all new features
+- uses: architweb/ClickUpNotification@v3.2.0
+  if: always() # Required for failure notifications
+  with:
+    # ... existing inputs ...
+    filter_agent_commits: "true"        # Filter bot commits (default)
+    group_commits_by_type: "false"      # Group by author (default)
+    show_pr_links: "false"             # Disable PR links (default)
+    staging_emoji: "🧪"                # Custom staging emoji
+    production_emoji: "🚀"             # Custom production emoji
+    notify_on_failure: "true"          # Enable failure notifications
+    workflow_status: ${{ job.status }}  # Pass job status
+```
+
+---
+
 ## [v3.1.0] - 2025-10-22
 
 ### 🎯 Enhanced Features
