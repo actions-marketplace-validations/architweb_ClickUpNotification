@@ -10,6 +10,18 @@ inputs:
     description: "Show commit statistics in the notification"
     required: false
     default: "false"
+  filter_agent_commits:
+    description: "Filter out agent-generated commits (Initial plan, Agent-Logs-Url, Co-authored-by)"
+    required: false
+    default: "true"
+  group_commits_by_type:
+    description: "Group commits by conventional commit type instead of by author"
+    required: false
+    default: "false"
+  show_pr_links:
+    description: "Show PR links next to commit references"
+    required: false
+    default: "false"
 
 outputs:
   commit_file:
@@ -37,7 +49,10 @@ runs:
         "$GITHUB_ACTION_PATH/scripts/process-commits.sh" \
           "${{ steps.get-data.outputs.COMMITS_DATA }}" \
           "${{ inputs.full_commit_message }}" \
-          "$COMMITS_OUTPUT"
+          "$COMMITS_OUTPUT" \
+          "${{ inputs.filter_agent_commits }}" \
+          "${{ inputs.group_commits_by_type }}" \
+          "${{ inputs.show_pr_links }}"
         echo "COMMITS_OUTPUT=$COMMITS_OUTPUT" >> $GITHUB_OUTPUT
 
     - name: Generate Statistics

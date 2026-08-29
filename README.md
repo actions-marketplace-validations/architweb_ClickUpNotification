@@ -19,13 +19,18 @@ It'll Send message to ClickUp chat, including:
 - **Project name**
 - **Triggered by**
 - **Duration** (configurable)
-- **Changelog** since last run, grouped by author (configurable)
+- **Changelog** since last run, grouped by author or by commit type (configurable)
 - **Commits statistics** with deployment metrics (configurable)
 - Automatic ClickUp **task links** from (custom) task IDs in commit messages with **cross-platform compatibility**
 - **Single line** or **full commit** message mode
 - **Emphasizes Conventional** Commit types
 - **Smart name resolution** for workspaces and channels
 - **Merge commit filtering** to keep changelogs clean
+- **Agent commit filtering** to hide bot-generated commits
+- **Capitalized contributor names** with Copilot agent attribution
+- **Environment-specific emojis** (staging 🧪 / production 🚀)
+- **PR link association** for commit references
+- **Failure notifications** with workflow run links
 - **Test mode** for previewing messages without sending
 
 ## Screenshots
@@ -66,6 +71,13 @@ The action requires the following inputs to connect to ClickUp and identify your
 | `show_changelog_commits` | Show changelog commits in the notification                | "true" \| "false" | No       | `true`  |
 | `full_commit_message`    | Use full commit messages instead of first line only       | "true" \| "false" | No       | `true`  |
 | `show_commit_statistics` | Show commit statistics table in the notification          | "true" \| "false" | No       | `false` |
+| `filter_agent_commits`   | Filter out agent-generated commits from changelog         | "true" \| "false" | No       | `true`  |
+| `group_commits_by_type`  | Group commits by conventional commit type                 | "true" \| "false" | No       | `false` |
+| `show_pr_links`          | Linkify PR/issue references in commit messages            | "true" \| "false" | No       | `false` |
+| `staging_emoji`          | Emoji for staging branch notifications                    | string            | No       | `🧪`   |
+| `production_emoji`       | Emoji for production branch notifications                 | string            | No       | `🚀`   |
+| `notify_on_failure`      | Send notification on workflow failure                     | "true" \| "false" | No       | `false` |
+| `workflow_status`        | Current job status for failure notifications              | string            | No       | `success` |
 | `test_mode`              | Preview mode - show message without sending to ClickUp    | "true" \| "false" | No       | `false` |
 
 ## Task ID Integration
@@ -99,7 +111,7 @@ Where the task ID becomes a clickable link to the task in ClickUp. This makes it
 Enable detailed deployment metrics with `show_commit_statistics: "true"`:
 
 ```yaml
-- uses: architweb/ClickUpNotification@v3.1.0
+- uses: architweb/ClickUpNotification@v3.2.0
   with:
     # ... other inputs ...
     show_commit_statistics: "true"
@@ -119,7 +131,7 @@ Enable detailed deployment metrics with `show_commit_statistics: "true"`:
 Preview notifications without sending to ClickUp:
 
 ```yaml
-- uses: architweb/ClickUpNotification@v3.1.0
+- uses: architweb/ClickUpNotification@v3.2.0
   with:
     # ... other inputs ...
     test_mode: "true"
@@ -137,7 +149,7 @@ Preview notifications without sending to ClickUp:
 Fine-tune how commits are displayed:
 
 ```yaml
-- uses: architweb/ClickUpNotification@v3.1.0
+- uses: architweb/ClickUpNotification@v3.2.0
   with:
     # ... other inputs ...
     full_commit_message: "true" # Use full commit messages
@@ -146,9 +158,100 @@ Fine-tune how commits are displayed:
 **Features:**
 
 - **🚫 Merge Filtering**: Automatically excludes merge commits
-- **🔤 Alphabetical Sorting**: Orders commits A-Z by message
+- **🤖 Agent Filtering**: Filters out bot-generated commits (configurable)
 - **📝 Full Messages**: Option for complete commit messages vs first line only
 - **👥 Author Grouping**: Commits organized by contributor
+- **📂 Type Grouping**: Optionally group by conventional commit type
+- **🔗 PR Links**: Auto-link PR references to GitHub
+
+### 🤖 Agent Commit Filtering
+
+Automatically clean up bot-generated commits from changelogs:
+
+```yaml
+- uses: architweb/ClickUpNotification@v3.2.0
+  with:
+    # ... other inputs ...
+    filter_agent_commits: "true" # Enabled by default
+```
+
+**Filtered Patterns:**
+
+- Commits with message "Initial plan"
+- Commits starting with "Agent-Logs-Url:"
+- Commits starting with "Co-authored-by:"
+- Co-authored-by trailer lines in commit bodies
+
+**Copilot Agent Attribution:**
+
+When the commit author is "copilot swe agent bot", the action extracts the co-authored contributor name and displays it as the primary author:
+
+- `copilot swe agent bot` → `Contributor Name (Copilot Agent)`
+
+### 🎨 Environment-Specific Emojis
+
+Customize notification emojis per environment:
+
+```yaml
+- uses: architweb/ClickUpNotification@v3.2.0
+  with:
+    # ... other inputs ...
+    staging_emoji: "🧪"    # Default for staging branches
+    production_emoji: "🚀"  # Default for production branches
+```
+
+The emoji is auto-selected based on whether the branch name contains "staging".
+
+### 📂 Group Commits by Type
+
+Group changelog entries by conventional commit type instead of by author:
+
+```yaml
+- uses: architweb/ClickUpNotification@v3.2.0
+  with:
+    # ... other inputs ...
+    group_commits_by_type: "true"
+```
+
+**Type Categories:**
+
+- 🎯 **Features** | 🔧 **Fixes** | 🔄 **Refactors** | 📝 **Documentation**
+- 🎨 **Styles** | 🧪 **Tests** | 🏗️ **Build** | 🧹 **Chores**
+- ⏪ **Reverts** | 🔒 **Security** | 📦 **Dependencies** | 🔌 **API**
+- 📋 **Other** (non-conventional commits)
+
+### 🔗 PR Link Association
+
+Auto-link PR/issue references in commit messages:
+
+```yaml
+- uses: architweb/ClickUpNotification@v3.2.0
+  with:
+    # ... other inputs ...
+    show_pr_links: "true"
+```
+
+Converts `#123` references to clickable GitHub links.
+
+### ❌ Failure Notifications
+
+Get notified when deployments fail:
+
+```yaml
+- name: Send ClickUp Notification
+  uses: architweb/ClickUpNotification@v3.2.0
+  if: always() # Required to run on failure
+  with:
+    # ... other inputs ...
+    notify_on_failure: "true"
+    workflow_status: ${{ job.status }}
+```
+
+**Failure notifications include:**
+
+- ❌ Failure indicator with project name and branch
+- 👤 Triggering user
+- 🔗 Direct link to the workflow run for debugging
 
 ## Architecture
 
@@ -225,7 +328,8 @@ jobs:
 
       # Last step: Send ClickUp notification upon successful deployment
       - name: Send ClickUp Notification
-        uses: architweb/ClickUpNotification@v3.1.0 # Use the latest version of the action
+        uses: architweb/ClickUpNotification@v3.2.0 # Use the latest version of the action
+        if: always() # Required for failure notifications
         with:
           # Pass the required secrets to the action
           clickup_api_token: ${{ secrets.CLICKUP_API_TOKEN }}
@@ -234,10 +338,14 @@ jobs:
           clickup_project_name: ${{ secrets.CLICKUP_PROJECT_NAME }}
           # Optional parameters
           full_commit_message: "true" # Set to 'false' to use only first line of commit messages
-          sort_commits_alphabetically: "true" # Sort commits A-Z for better readability
           show_commit_statistics: "false" # Set to 'true' to show deployment metrics
           show_fetch_duration: "true" # Set to 'false' to hide duration information
           show_changelog_commits: "true" # Set to 'false' to hide changelog
+          filter_agent_commits: "true" # Set to 'false' to show agent commits
+          group_commits_by_type: "false" # Set to 'true' to group by commit type
+          show_pr_links: "false" # Set to 'true' to linkify PR references
+          notify_on_failure: "true" # Set to 'true' to get failure notifications
+          workflow_status: ${{ job.status }} # Pass job status for failure detection
           test_mode: "false" # Set to 'true' to preview without sending
           title: "🎉 Staging Deployment Complete" # Custom title (optional)
           description: "New features deployed to staging environment" # Custom description (optional)
@@ -251,7 +359,7 @@ Perfect for production deployments where you want comprehensive metrics:
 
 ```yaml
 - name: Production Deployment Notification
-  uses: architweb/ClickUpNotification@v3.1.0
+  uses: architweb/ClickUpNotification@v3.2.0
   with:
     clickup_api_token: ${{ secrets.CLICKUP_API_TOKEN }}
     clickup_workspace_id: ${{ secrets.CLICKUP_WORKSPACE_ID }}
@@ -259,8 +367,9 @@ Perfect for production deployments where you want comprehensive metrics:
     clickup_project_name: ${{ secrets.CLICKUP_PROJECT_NAME }}
     title: "🚀 Production Release"
     description: "Production deployment with full metrics and changelog"
-    show_commit_statistics: "true" # Show detailed deployment stats
-    sort_commits_alphabetically: "true"
+    show_commit_statistics: "true"
+    group_commits_by_type: "true"
+    show_pr_links: "true"
     full_commit_message: "true"
 ```
 
@@ -270,7 +379,7 @@ Preview notifications during development:
 
 ```yaml
 - name: Test Notification Format
-  uses: architweb/ClickUpNotification@v3.1.0
+  uses: architweb/ClickUpNotification@v3.2.0
   with:
     clickup_api_token: ${{ secrets.CLICKUP_API_TOKEN }}
     clickup_workspace_id: ${{ secrets.CLICKUP_WORKSPACE_ID }}
@@ -287,7 +396,7 @@ Perfect for quick status updates:
 
 ```yaml
 - name: Quick Status Update
-  uses: architweb/ClickUpNotification@v3.1.0
+  uses: architweb/ClickUpNotification@v3.2.0
   with:
     clickup_api_token: ${{ secrets.CLICKUP_API_TOKEN }}
     clickup_workspace_id: ${{ secrets.CLICKUP_WORKSPACE_ID }}
@@ -305,7 +414,7 @@ Comprehensive notification for important deployments:
 
 ```yaml
 - name: Production Release Notification
-  uses: architweb/ClickUpNotification@v3.1.0
+  uses: architweb/ClickUpNotification@v3.2.0
   with:
     clickup_api_token: ${{ secrets.CLICKUP_API_TOKEN }}
     clickup_workspace_id: ${{ secrets.CLICKUP_WORKSPACE_ID }}
@@ -367,4 +476,4 @@ If this action helps your workflow, please consider:
 
 **Made with ❤️ for the GitHub Actions community**
 
-_© 2025 ArchitWeb. Released under the [MIT License](https://opensource.org/licenses/MIT)._
+_© 2025-2026 ArchitWeb. Released under the [MIT License](https://opensource.org/licenses/MIT)._

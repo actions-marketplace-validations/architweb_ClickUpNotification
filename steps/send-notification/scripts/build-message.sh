@@ -15,11 +15,17 @@ if [ -f "$USER_INFO_FILE" ]; then
   source "$USER_INFO_FILE"
 fi
 
+# Determine environment emoji
+DEPLOY_EMOJI="${PRODUCTION_EMOJI:-🚀}"
+if echo "${GITHUB_REF_NAME}" | grep -qi "staging"; then
+  DEPLOY_EMOJI="${STAGING_EMOJI:-🧪}"
+fi
+
 # Build base message
 if [ -n "$TITLE" ]; then
-  BASE_MESSAGE="🚀 **${GITHUB_REF_NAME}** | **${CLICKUP_PROJECT_NAME}** | $TITLE"
+  BASE_MESSAGE="${DEPLOY_EMOJI} **${GITHUB_REF_NAME}** | **${CLICKUP_PROJECT_NAME}** | $TITLE"
 else
-  BASE_MESSAGE="🚀 **${CLICKUP_PROJECT_NAME}** deployed to **${GITHUB_REF_NAME}**"
+  BASE_MESSAGE="${DEPLOY_EMOJI} **${CLICKUP_PROJECT_NAME}** deployed to **${GITHUB_REF_NAME}**"
 fi
 
 DEPLOY_INFO="_Triggered by: ${TRIGGERING_USER_NAME}"
